@@ -26,6 +26,11 @@ jobs:
           cd server-update
           npm ci
 
+      - name: Build functions
+        run: |
+          cd server-update
+          npm run build
+
       - name: Deploy to Netlify
         uses: netlify/actions/cli@master
         env:

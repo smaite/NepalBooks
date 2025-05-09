@@ -6,11 +6,12 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "netlify-lambda build src/functions",
-    "build:functions": "netlify-lambda build src/functions",
-    "serve:functions": "netlify-lambda serve src/functions",
+    "build": "netlify-lambda build src/functions -c webpack.functions.js",
+    "build:functions": "netlify-lambda build src/functions -c webpack.functions.js",
+    "serve:functions": "netlify-lambda serve src/functions -c webpack.functions.js",
     "netlify:dev": "node dev.js",
-    "postinstall": "mkdir -p src/functions"
+    "setup": "node scripts/setup.js",
+    "postinstall": "npm run setup"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -20,6 +21,9 @@
     "serverless-http": "^3.2.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "babel-loader": "^9.1.2",
     "netlify-lambda": "^2.0.16",
     "netlify-cli": "^15.0.0",
     "nodemon": "^3.0.1"

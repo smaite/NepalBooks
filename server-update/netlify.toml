@@ -2,9 +2,11 @@
   base = "server-update/"
   publish = "public/"
   command = "npm run build"
+  functions = "functions"
 
 [functions]
   directory = "functions/"
+  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/api/*"
@@ -13,4 +15,5 @@
 
 [dev]
   command = "npm run dev"
-  port = 3005 
+  port = 3005
+  functions = "functions" 
