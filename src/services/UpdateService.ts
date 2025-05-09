@@ -25,10 +25,10 @@ export class UpdateService {
   // GitHub server URL (can be used as fallback)
   private githubServerUrl: string = 'https://api.github.com/repos/yourusername/nepalbooks/releases/latest';
   
-  // Custom update server URL - updated to the specified URL
+  // Custom update server URL - updated to match the server-update implementation
   private customServerUrl: string = import.meta.env.PROD 
     ? 'https://up-books.netlify.app/api/updates' 
-    : 'http://localhost:3000/api/updates';
+    : 'http://localhost:3005/api/updates';
   
   private currentVersion: string;
 
@@ -100,7 +100,7 @@ export class UpdateService {
       return this.githubServerUrl;
     }
     
-    // Use channel-specific endpoint
+    // Use channel-specific endpoint based on server-update implementation
     return `${this.customServerUrl}/latest/${this.currentChannel}`;
   }
 
@@ -129,10 +129,10 @@ export class UpdateService {
       
       // Format the response to our ReleaseInfo interface
       const releaseInfo: ReleaseInfo = {
-        version: releaseData.version || releaseData.tag_name?.replace('v', ''),
+        version: releaseData.tag_name?.replace('v', '') || '',
         url: this.getDownloadUrlForPlatform(releaseData),
-        notes: releaseData.notes || releaseData.body || 'No release notes available',
-        publishedAt: releaseData.publishedAt || releaseData.published_at,
+        notes: releaseData.body || 'No release notes available',
+        publishedAt: releaseData.published_at || new Date().toISOString(),
         mandatory: releaseData.mandatory || false,
         channel: releaseData.channel || 'stable'
       };
@@ -179,10 +179,10 @@ export class UpdateService {
       
       // Map the response to our ReleaseInfo interface
       return releasesData.map((release: any) => ({
-        version: release.version || release.tag_name?.replace('v', ''),
+        version: release.tag_name?.replace('v', '') || '',
         url: this.getDownloadUrlForPlatform(release),
-        notes: release.notes || release.body || 'No release notes available',
-        publishedAt: release.publishedAt || release.published_at,
+        notes: release.body || 'No release notes available',
+        publishedAt: release.published_at || new Date().toISOString(),
         mandatory: release.mandatory || false,
         channel: release.channel || 'stable'
       }));
@@ -223,7 +223,7 @@ export class UpdateService {
       return asset ? asset.browser_download_url : '';
     }
     
-    // For custom server
+    // For custom server - adapted to match the server-update format
     const asset = releaseData.assets?.find((asset: any) => 
       asset.platform === platformKey
     );
@@ -255,11 +255,13 @@ export class UpdateService {
     const newParts = cleanNewVersion.split('.').map(part => parseInt(part, 10));
     const currentParts = cleanCurrentVersion.split('.').map(part => parseInt(part, 10));
 
-    for (let i = 0; i < newParts.length; i++) {
-      if (newParts[i] > (currentParts[i] || 0)) {
+    for (let i = 0; i < Math.max(newParts.length, currentParts.length); i++) {
+      const numA = newParts[i] || 0;
+      const numB = currentParts[i] || 0;
+      if (numA > numB) {
         return true;
       }
-      if (newParts[i] < (currentParts[i] || 0)) {
+      if (numA < numB) {
         return false;
       }
     }

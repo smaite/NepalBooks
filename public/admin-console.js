@@ -78,18 +78,11 @@
       panel.innerHTML = `
         <h2 style="margin-bottom: 20px;">NepalBooks Release Manager</h2>
         
-        <div id="auth-section" style="margin-bottom: 20px;">
-          <h3>Authentication</h3>
-          <input type="password" id="admin-password" placeholder="Admin Password" style="width: 100%; padding: 8px; margin-bottom: 10px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
-          <button id="auth-button" style="padding: 8px 16px; background: #1c7ed6; color: white; border: none; border-radius: 4px; cursor: pointer;">Authenticate</button>
-          <div id="auth-message" style="margin-top: 10px; color: #fa5252; display: none;"></div>
-        </div>
-        
-        <div id="release-form" style="display: none;">
+        <div id="release-form">
           <h3>Publish New Release</h3>
           
           <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 5px;">Version*</label>
+            <label style="display: block; margin-bottom: 5px;">Version* (without v prefix)</label>
             <input id="version" type="text" placeholder="1.0.0" required style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
           </div>
           
@@ -120,17 +113,17 @@
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px;">Windows Download URL</label>
-            <input id="win-url" type="url" placeholder="https://example.com/app-win.exe" style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
+            <input id="win-url" type="url" placeholder="https://example.com/NepalBooks-1.0.0-win.exe" style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
           </div>
           
           <div style="margin-bottom: 15px;">
             <label style="display: block; margin-bottom: 5px;">macOS Download URL</label>
-            <input id="mac-url" type="url" placeholder="https://example.com/app-mac.dmg" style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
+            <input id="mac-url" type="url" placeholder="https://example.com/NepalBooks-1.0.0-mac.dmg" style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
           </div>
           
           <div style="margin-bottom: 20px;">
             <label style="display: block; margin-bottom: 5px;">Linux Download URL</label>
-            <input id="linux-url" type="url" placeholder="https://example.com/app-linux.AppImage" style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
+            <input id="linux-url" type="url" placeholder="https://example.com/NepalBooks-1.0.0-linux.AppImage" style="width: 100%; padding: 8px; background: #25262b; color: white; border: 1px solid #373a40; border-radius: 4px;">
           </div>
           
           <div id="form-error" style="color: #ff4d4f; margin-bottom: 15px; display: none;"></div>
@@ -143,35 +136,6 @@
       container.appendChild(panel);
       panel.appendChild(closeBtn);
       document.body.appendChild(container);
-      
-      // Authenticate admin
-      document.getElementById('auth-button').addEventListener('click', async function() {
-        const passwordInput = document.getElementById('admin-password');
-        const password = passwordInput.value;
-        const authMessage = document.getElementById('auth-message');
-        
-        try {
-          const response = await fetch(`${API_URL}/admin/auth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            authToken = data.token;
-            document.getElementById('auth-section').style.display = 'none';
-            document.getElementById('release-form').style.display = 'block';
-          } else {
-            authMessage.textContent = 'Authentication failed';
-            authMessage.style.display = 'block';
-          }
-        } catch (error) {
-          authMessage.textContent = 'Error connecting to server';
-          authMessage.style.display = 'block';
-          console.error('Auth error:', error);
-        }
-      });
       
       // Handle form submission
       document.getElementById('publish-button').addEventListener('click', async function() {
@@ -218,12 +182,13 @@
         if (macUrl) downloadUrls['mac'] = macUrl;
         if (linuxUrl) downloadUrls['linux'] = linuxUrl;
         
-        // Create release data
+        // Create release data in the format expected by server-update
         const releaseData = {
           version,
           notes,
           channel,
           mandatory,
+          publishedAt: new Date().toISOString(),
           downloadUrls
         };
         
@@ -232,8 +197,7 @@
           const response = await fetch(`${API_URL}/admin/publish`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${authToken}`
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify(releaseData)
           });
@@ -250,8 +214,14 @@
             linuxUrlInput.value = '';
             mandatoryInput.checked = false;
           } else {
-            const errorData = await response.json();
-            errorContainer.textContent = errorData.error || 'Failed to publish release';
+            let errorMessage = 'Failed to publish release';
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              // If response is not JSON
+            }
+            errorContainer.textContent = errorMessage;
             errorContainer.style.display = 'block';
           }
         } catch (error) {
