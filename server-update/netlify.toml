@@ -7,13 +7,24 @@
 [functions]
   directory = "functions/"
   node_bundler = "esbuild"
+  included_files = ["releases/**"]
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/updates/latest"
+  to = "/.netlify/functions/updates/latest"
+  status = 200
+
+[[redirects]]
+  from = "/api/updates/version/*"
+  to = "/.netlify/functions/updates/version/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/publish"
+  to = "/.netlify/functions/updates/admin/publish"
   status = 200
 
 [dev]
-  command = "npm run dev"
+  command = "npm run netlify:dev"
   port = 3005
   functions = "functions" 

@@ -3,13 +3,17 @@ const path = require('path');
 
 // Create necessary directories
 const releasesDir = path.join(__dirname, '..', 'releases');
-const functionsDir = path.join(__dirname, '..', 'src', 'functions');
+const functionsDir = path.join(__dirname, '..', 'functions');
+const srcFunctionsDir = path.join(__dirname, '..', 'src', 'functions');
 const publicDir = path.join(__dirname, '..', 'public');
+const functionReleasesDir = path.join(__dirname, '..', 'functions', 'releases');
 
 // Ensure directories exist
 fs.ensureDirSync(releasesDir);
 fs.ensureDirSync(functionsDir);
+fs.ensureDirSync(srcFunctionsDir);
 fs.ensureDirSync(publicDir);
+fs.ensureDirSync(functionReleasesDir);
 
 // Create a sample latest.json file if it doesn't exist
 const latestJsonPath = path.join(releasesDir, 'latest.json');
@@ -30,7 +34,11 @@ if (!fs.existsSync(latestJsonPath)) {
   };
   
   fs.writeJsonSync(latestJsonPath, sampleRelease, { spaces: 2 });
+  fs.writeJsonSync(path.join(functionReleasesDir, 'latest.json'), sampleRelease, { spaces: 2 });
   console.log('Created sample latest.json file');
 }
+
+// Copy releases to functions/releases
+fs.copySync(releasesDir, functionReleasesDir);
 
 console.log('Setup completed successfully!'); 

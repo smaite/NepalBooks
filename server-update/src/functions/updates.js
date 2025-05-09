@@ -22,7 +22,7 @@ const getReleasesDirectory = () => {
 };
 
 // Get latest release info
-app.get('/api/updates/latest', async (req, res) => {
+app.get('/latest', async (req, res) => {
   try {
     const latestReleasePath = path.join(getReleasesDirectory(), 'latest.json');
     if (fs.existsSync(latestReleasePath)) {
@@ -37,7 +37,7 @@ app.get('/api/updates/latest', async (req, res) => {
 });
 
 // Get specific version info
-app.get('/api/updates/version/:version', async (req, res) => {
+app.get('/version/:version', async (req, res) => {
   try {
     const { version } = req.params;
     const versionPath = path.join(getReleasesDirectory(), `${version}.json`);
@@ -54,7 +54,7 @@ app.get('/api/updates/version/:version', async (req, res) => {
 });
 
 // Admin API to publish a new release - should be protected in production
-app.post('/api/admin/publish', async (req, res) => {
+app.post('/admin/publish', async (req, res) => {
   try {
     const { version, notes, publishedAt, downloadUrls, mandatory } = req.body;
     
@@ -94,4 +94,4 @@ app.use((req, res) => {
 });
 
 // Export the serverless handler
-module.exports.handler = serverless(app); 
+exports.handler = serverless(app); 

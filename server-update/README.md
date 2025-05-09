@@ -1,8 +1,8 @@
 # NepalBooks Update Server
 
-A local update server for NepalBooks application that provides a self-hosted alternative to GitHub releases for distributing updates.
+A simple update server for NepalBooks application deployed on Netlify.
 
-## Setup
+## Local Development
 
 1. Install dependencies:
    ```
@@ -10,12 +10,12 @@ A local update server for NepalBooks application that provides a self-hosted alt
    npm install
    ```
 
-2. Start the server:
+2. Start the development server:
    ```
-   npm start
+   npm run dev
    ```
 
-The server will run on port 3005 by default. You can change this by setting the `PORT` environment variable.
+The server will run on port 3005 by default.
 
 ## Server Endpoints
 
@@ -27,110 +27,53 @@ The update server exposes the following endpoints:
 
 ## Directory Structure
 
-- `public/downloads/` - Place your application binaries here
-- `releases/` - Contains release metadata JSON files
-- `server.js` - The main server script
-- `admin.js` - Admin utility for managing releases
-- `src/functions/` - Netlify serverless functions
-
-## Using the Admin Tool
-
-The admin tool provides a command-line interface to manage releases:
-
-```
-node admin.js
-```
-
-This will show a menu with options to:
-
-1. Create a new release
-2. List all releases
-3. Set which release is considered "latest"
-4. Delete a release
-
-## Connecting the Application
-
-To use this local update server with your NepalBooks application, modify the `updateServerUrl` in the `UpdateService.ts` file:
-
-```typescript
-// src/services/UpdateService.ts
-private updateServerUrl: string = 'http://localhost:3005/api/updates/latest';
-```
-
-For production, you would change this to your hosted server URL.
+- `public/` - Static assets and public files
+- `src/functions/` - Source code for serverless functions
+- `functions/` - Compiled serverless functions (generated during build)
+- `releases/` - Release data JSON files
 
 ## Deploying to Netlify
 
-### Prerequisites
+### Manual Deployment
 
-1. Install the Netlify CLI:
+1. Build the project:
    ```
-   npm install -g netlify-cli
-   ```
-
-2. Login to Netlify:
-   ```
-   netlify login
+   npm run build
    ```
 
-### Deployment Steps
-
-1. Initialize a new Netlify site (first time only):
+2. Deploy to Netlify:
    ```
-   netlify init
+   npm run deploy
    ```
 
-2. Build and deploy the site:
-   ```
-   netlify deploy --prod
-   ```
+### Automatic Deployment
 
-3. Once deployed, update your application's `UpdateService.ts` to point to your Netlify URL:
-   ```typescript
-   private customServerUrl: string = 'https://your-netlify-site.netlify.app/.netlify/functions/updates';
-   ```
+The project is set up with GitHub Actions to automatically deploy to Netlify whenever changes are pushed to the main branch.
 
-### Important Netlify Configuration
+## Using with the NepalBooks App
 
-- The `netlify.toml` file configures how the site is built and deployed
-- The serverless function in `src/functions/updates.js` handles all API requests
-- Release files are stored in the `releases` directory
-- Download files are served from the `public/downloads` directory
+To use this update server with your NepalBooks application, set the `customServerUrl` in your application's update service to point to the Netlify function:
 
-## Testing Updates
+```typescript
+// In src/services/UpdateService.ts
+private customServerUrl: string = 'https://your-netlify-site.netlify.app/.netlify/functions/updates';
+```
 
-To test the update flow:
+## Publishing Updates
 
-1. Build your application with a lower version number (e.g., v1.0.1)
-2. Install that version
-3. Create a new release on the update server with a higher version number (e.g., v1.0.2)
-4. Start the application and it should detect the update
-
-## Example Release Format
+To publish a new update, send a POST request to the admin endpoint with the following payload:
 
 ```json
 {
-  "tag_name": "v1.0.2",
-  "name": "NepalBooks v1.0.2",
-  "body": "- Added: Feature 1\n- Fixed: Bug 1\n- Improved: Performance",
-  "published_at": "2023-05-01T10:00:00Z",
-  "assets": [
-    {
-      "platform": "win",
-      "browser_download_url": "http://localhost:3005/downloads/NepalBooks-1.0.2-win.exe",
-      "name": "NepalBooks-1.0.2-win.exe"
-    },
-    {
-      "platform": "mac",
-      "browser_download_url": "http://localhost:3005/downloads/NepalBooks-1.0.2-mac.dmg",
-      "name": "NepalBooks-1.0.2-mac.dmg"
-    },
-    {
-      "platform": "linux",
-      "browser_download_url": "http://localhost:3005/downloads/NepalBooks-1.0.2-linux.AppImage",
-      "name": "NepalBooks-1.0.2-linux.AppImage"
-    }
-  ],
+  "version": "1.0.2",
+  "notes": "- Added: Feature 1\n- Fixed: Bug 1\n- Improved: Performance",
+  "downloadUrls": {
+    "win": "https://example.com/downloads/NepalBooks-1.0.2-win.exe",
+    "mac": "https://example.com/downloads/NepalBooks-1.0.2-mac.dmg",
+    "linux": "https://example.com/downloads/NepalBooks-1.0.2-linux.AppImage"
+  },
   "mandatory": false
 }
-``` 
+```
+
+This will create a new release record and update the latest.json file. 
