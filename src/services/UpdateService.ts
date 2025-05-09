@@ -25,10 +25,10 @@ export class UpdateService {
   // GitHub server URL (can be used as fallback)
   private githubServerUrl: string = 'https://api.github.com/repos/yourusername/nepalbooks/releases/latest';
   
-  // Custom update server URL
+  // Custom update server URL - updated to the specified URL
   private customServerUrl: string = import.meta.env.PROD 
-    ? 'https://nepalbooks-updates.netlify.app/.netlify/functions/updates' 
-    : 'http://localhost:3005/api/updates';
+    ? 'https://up-books.netlify.app/api/updates' 
+    : 'http://localhost:3000/api/updates';
   
   private currentVersion: string;
 
@@ -129,10 +129,10 @@ export class UpdateService {
       
       // Format the response to our ReleaseInfo interface
       const releaseInfo: ReleaseInfo = {
-        version: releaseData.tag_name.replace('v', ''),
+        version: releaseData.version || releaseData.tag_name?.replace('v', ''),
         url: this.getDownloadUrlForPlatform(releaseData),
-        notes: releaseData.body || 'No release notes available',
-        publishedAt: releaseData.published_at,
+        notes: releaseData.notes || releaseData.body || 'No release notes available',
+        publishedAt: releaseData.publishedAt || releaseData.published_at,
         mandatory: releaseData.mandatory || false,
         channel: releaseData.channel || 'stable'
       };
@@ -179,10 +179,10 @@ export class UpdateService {
       
       // Map the response to our ReleaseInfo interface
       return releasesData.map((release: any) => ({
-        version: release.tag_name.replace('v', ''),
+        version: release.version || release.tag_name?.replace('v', ''),
         url: this.getDownloadUrlForPlatform(release),
-        notes: release.body || 'No release notes available',
-        publishedAt: release.published_at,
+        notes: release.notes || release.body || 'No release notes available',
+        publishedAt: release.publishedAt || release.published_at,
         mandatory: release.mandatory || false,
         channel: release.channel || 'stable'
       }));
@@ -213,7 +213,7 @@ export class UpdateService {
     
     // For GitHub releases
     if (this.serverType === 'github') {
-      const asset = releaseData.assets.find((asset: any) => 
+      const asset = releaseData.assets?.find((asset: any) => 
         asset.name.includes(platformKey) || 
         (platformKey === 'win' && asset.name.endsWith('.exe')) ||
         (platformKey === 'mac' && asset.name.endsWith('.dmg')) ||
@@ -224,7 +224,7 @@ export class UpdateService {
     }
     
     // For custom server
-    const asset = releaseData.assets.find((asset: any) => 
+    const asset = releaseData.assets?.find((asset: any) => 
       asset.platform === platformKey
     );
     

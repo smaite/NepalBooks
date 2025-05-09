@@ -50,6 +50,10 @@ class ElectronService {
     return !!this.electron;
   }
 
+  get isDev(): boolean {
+    return import.meta.env.DEV || import.meta.env.MODE === 'development';
+  }
+
   async saveFile(options: SaveDialogOptions, data: string): Promise<boolean> {
     if (this.isElectron) {
       return await this.electron!.saveFile(options, data);

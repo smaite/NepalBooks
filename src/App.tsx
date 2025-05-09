@@ -24,7 +24,7 @@ import { DatesProvider } from '@mantine/dates';
 import 'dayjs/locale/ne'; // Nepali locale
 import { useStore } from './store/useStore';
 import { electronService } from './services/ElectronService';
-import { UpdateNotification } from './components/UpdateNotification';
+import { UpdateNotification } from './components/common/UpdateNotification';
 
 // Import pages
 import Dashboard from './pages/Dashboard';
@@ -34,6 +34,7 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Suppliers from './pages/Suppliers';
 import Expenses from './pages/Expenses';
+import { ReleaseManager } from './components/admin/ReleaseManager';
 
 // Menu items types
 interface NavLinkItem {
@@ -459,6 +460,10 @@ function AppContent() {
           <Route path="/sales/list" element={<div><Title order={2}>Sales List</Title></div>} />
           <Route path="/sales/return" element={<div><Title order={2}>Sales Returns</Title></div>} />
           <Route path="/staff" element={<div><Title order={2}>Staff Management</Title></div>} />
+          {/* Admin routes */}
+          {electronService.isDev && (
+            <Route path="/admin/release-manager" element={<ReleaseManager />} />
+          )}
         </Routes>
       </Box>
     </AppShell>
@@ -467,16 +472,15 @@ function AppContent() {
 
 function App() {
   return (
-    <DatesProvider settings={{ locale: 'ne' }}>
-      <ModalsProvider>
-        <Notifications />
-        <Router>
+    <Router>
+      <DatesProvider settings={{ locale: 'ne' }}>
+        <ModalsProvider>
+          <Notifications position="top-right" />
+          <UpdateNotification />
           <AppContent />
-        </Router>
-        {/* Update notification */}
-        {electronService.isElectron && <UpdateNotification />}
-      </ModalsProvider>
-    </DatesProvider>
+        </ModalsProvider>
+      </DatesProvider>
+    </Router>
   );
 }
 

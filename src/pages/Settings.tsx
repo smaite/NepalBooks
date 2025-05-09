@@ -30,7 +30,7 @@ import {
   IconDownload
 } from '@tabler/icons-react';
 import { useStore } from '../store/useStore';
-import { UpdateSettings } from '../components/UpdateSettings';
+import { UpdateSettings } from '../components/settings/UpdateSettings';
 import { electronService } from '../services/ElectronService';
 
 interface SettingsFormValues {
@@ -106,6 +106,9 @@ const Settings = () => {
           <Tabs.Tab value="receipt" icon={<IconReceipt size="0.8rem" />}>Receipt</Tabs.Tab>
           {electronService.isElectron && (
             <Tabs.Tab value="updates" icon={<IconDownload size="0.8rem" />}>Updates</Tabs.Tab>
+          )}
+          {electronService.isDev && (
+            <Tabs.Tab value="admin" icon={<IconSettings size="0.8rem" />}>Admin</Tabs.Tab>
           )}
         </Tabs.List>
 
@@ -296,12 +299,31 @@ const Settings = () => {
             </Tabs.Panel>
 
             <Tabs.Panel value="receipt" pt="xs">
-              <Text>Receipt templates and printing options will be available in the next update.</Text>
+              <Stack spacing="md">
+                <Text>Receipt customization options will be added in a future update.</Text>
+              </Stack>
             </Tabs.Panel>
 
             {electronService.isElectron && (
               <Tabs.Panel value="updates" pt="xs">
                 <UpdateSettings />
+              </Tabs.Panel>
+            )}
+
+            {electronService.isDev && (
+              <Tabs.Panel value="admin" pt="xs">
+                <Stack spacing="md">
+                  <Title order={4}>Admin Tools</Title>
+                  <Divider />
+                  <Text>These tools are only available in development mode.</Text>
+                  <Button 
+                    component="a" 
+                    href="#/admin/release-manager" 
+                    variant="filled"
+                  >
+                    Release Manager
+                  </Button>
+                </Stack>
               </Tabs.Panel>
             )}
 
