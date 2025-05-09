@@ -27,11 +27,13 @@ import {
   IconCloud,
   IconUser,
   IconReceipt,
-  IconDownload
+  IconDownload,
+  IconTerminal
 } from '@tabler/icons-react';
 import { useStore } from '../store/useStore';
 import { UpdateSettings } from '../components/settings/UpdateSettings';
 import { electronService } from '../services/ElectronService';
+import { showAdminPanel } from '../admin';
 
 interface SettingsFormValues {
   businessName: string;
@@ -316,13 +318,27 @@ const Settings = () => {
                   <Title order={4}>Admin Tools</Title>
                   <Divider />
                   <Text>These tools are only available in development mode.</Text>
-                  <Button 
-                    component="a" 
-                    href="#/admin/release-manager" 
-                    variant="filled"
-                  >
-                    Release Manager
-                  </Button>
+                  <Group>
+                    <Button 
+                      component="a" 
+                      href="#/admin/release-manager" 
+                      variant="filled"
+                    >
+                      Release Manager
+                    </Button>
+                    
+                    <Button 
+                      variant="filled"
+                      color="green"
+                      leftIcon={<IconTerminal size="1rem" />}
+                      onClick={() => {
+                        // Use the showAdminPanel function from our admin module
+                        showAdminPanel();
+                      }}
+                    >
+                      Open Admin Panel
+                    </Button>
+                  </Group>
                 </Stack>
               </Tabs.Panel>
             )}

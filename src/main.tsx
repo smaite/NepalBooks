@@ -4,10 +4,13 @@ import { MantineProvider, ColorSchemeProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import App from './App';
 
-// Import our admin module for console access
-import './admin/UpdateAdmin';
+// Import admin module initialization
+import { initAdminModule } from './admin';
 
 import { useState } from 'react';
+
+// Initialize the admin module to make updateAdmin available globally
+initAdminModule();
 
 function Main() {
   const [colorScheme, setColorScheme] = useState<'light' | 'dark'>('dark');

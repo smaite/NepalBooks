@@ -256,4 +256,13 @@ const updateAdmin = new UpdateAdmin();
 export { updateAdmin };
 
 // Make available in window for console access
-(window as any).updateAdmin = updateAdmin; 
+(window as any).updateAdmin = updateAdmin;
+
+// Ensure updateAdmin is registered on window.onload
+window.addEventListener('load', () => {
+  // Double-check window.updateAdmin is correctly set
+  if (!(window as any).updateAdmin) {
+    (window as any).updateAdmin = updateAdmin;
+    console.log('NepalBooks Admin Panel is now available. Type updateAdmin.showAdminPanel() to access it.');
+  }
+}); 
