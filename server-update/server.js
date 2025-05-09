@@ -57,10 +57,25 @@ const serverlessToExpress = (serverlessHandler) => async (req, res) => {
 
 // Routes
 app.all('/api/updates/latest', serverlessToExpress(updatesHandler.handler));
+app.all('/api/updates/latest/:channel', serverlessToExpress(updatesHandler.handler));
+app.all('/api/updates/releases/:channel', serverlessToExpress(updatesHandler.handler));
 app.all('/api/updates/version/:version', serverlessToExpress(updatesHandler.handler));
 app.all('/api/admin/publish', serverlessToExpress(updatesHandler.handler));
+app.all('/api/admin/upload', serverlessToExpress(updatesHandler.handler));
 
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`
+Available endpoints:
+- GET /api/updates/latest                   - Get latest stable release
+- GET /api/updates/latest/stable            - Get latest stable release
+- GET /api/updates/latest/beta              - Get latest beta release
+- GET /api/updates/releases/stable          - Get all stable releases
+- GET /api/updates/releases/beta            - Get all beta releases
+- GET /api/updates/releases/all             - Get all releases (both channels)
+- GET /api/updates/version/{version}        - Get specific version
+- POST /api/admin/publish                   - Publish a new release
+- POST /api/admin/upload                    - Upload a release file (not implemented)
+  `);
 }); 

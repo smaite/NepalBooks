@@ -15,6 +15,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/updates/latest/:channel"
+  to = "/.netlify/functions/updates/latest/:channel"
+  status = 200
+
+[[redirects]]
+  from = "/api/updates/releases/:channel"
+  to = "/.netlify/functions/updates/releases/:channel"
+  status = 200
+
+[[redirects]]
   from = "/api/updates/version/*"
   to = "/.netlify/functions/updates/version/:splat"
   status = 200
@@ -22,6 +32,11 @@
 [[redirects]]
   from = "/api/admin/publish"
   to = "/.netlify/functions/updates/admin/publish"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/upload"
+  to = "/.netlify/functions/updates/admin/upload"
   status = 200
 
 [dev]

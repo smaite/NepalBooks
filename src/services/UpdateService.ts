@@ -6,14 +6,21 @@ interface ReleaseInfo {
   notes: string;
   publishedAt: string;
   mandatory: boolean;
+  channel: string;
 }
 
 // Update server types
 type UpdateServerType = 'github' | 'custom';
 
+// Update channel
+export type UpdateChannel = 'stable' | 'beta';
+
 export class UpdateService {
-  // Default to GitHub server
+  // Default to custom server
   private serverType: UpdateServerType = 'custom';
+  
+  // Default to stable channel
+  private currentChannel: UpdateChannel = 'stable';
   
   // GitHub server URL (can be used as fallback)
   private githubServerUrl: string = 'https://api.github.com/repos/yourusername/nepalbooks/releases/latest';
@@ -21,7 +28,7 @@ export class UpdateService {
   // Custom update server URL
   private customServerUrl: string = import.meta.env.PROD 
     ? 'https://nepalbooks-updates.netlify.app/.netlify/functions/updates' 
-    : 'http://localhost:3005/api/updates/latest';
+    : 'http://localhost:3005/api/updates';
   
   private currentVersion: string;
 
@@ -32,7 +39,44 @@ export class UpdateService {
     // Check if we're in development mode to use the local server by default
     if (import.meta.env.DEV) {
       this.serverType = 'custom';
+      // Default to beta channel in development
+      this.currentChannel = 'beta';
     }
+    
+    // Try to load the preferred channel from storage
+    this.loadPreferredChannel();
+  }
+
+  // Load preferred channel from storage
+  private loadPreferredChannel() {
+    try {
+      const savedChannel = localStorage.getItem('updateChannel');
+      if (savedChannel === 'beta' || savedChannel === 'stable') {
+        this.currentChannel = savedChannel;
+      }
+    } catch (error) {
+      console.error('Error loading preferred update channel:', error);
+    }
+  }
+
+  // Save preferred channel to storage
+  private savePreferredChannel() {
+    try {
+      localStorage.setItem('updateChannel', this.currentChannel);
+    } catch (error) {
+      console.error('Error saving preferred update channel:', error);
+    }
+  }
+
+  // Get the current channel
+  getCurrentChannel(): UpdateChannel {
+    return this.currentChannel;
+  }
+
+  // Set the channel ('stable' or 'beta')
+  setChannel(channel: UpdateChannel) {
+    this.currentChannel = channel;
+    this.savePreferredChannel();
   }
 
   // Set the server type ('github' or 'custom')
@@ -52,9 +96,20 @@ export class UpdateService {
 
   // Get the current active update server URL
   private getUpdateServerUrl(): string {
-    return this.serverType === 'github' ? this.githubServerUrl : this.customServerUrl;
+    if (this.serverType === 'github') {
+      return this.githubServerUrl;
+    }
+    
+    // Use channel-specific endpoint
+    return `${this.customServerUrl}/latest/${this.currentChannel}`;
   }
 
+  // Get URL for all releases in the current channel
+  private getReleasesUrl(): string {
+    return `${this.customServerUrl}/releases/${this.currentChannel}`;
+  }
+
+  // Check for updates in the current channel
   async checkForUpdates(): Promise<ReleaseInfo | null> {
     try {
       if (!electronService.isElectron) {
@@ -78,10 +133,11 @@ export class UpdateService {
         url: this.getDownloadUrlForPlatform(releaseData),
         notes: releaseData.body || 'No release notes available',
         publishedAt: releaseData.published_at,
-        mandatory: releaseData.body?.includes('#mandatory') || false
+        mandatory: releaseData.mandatory || false,
+        channel: releaseData.channel || 'stable'
       };
 
-      console.log(`Found version ${releaseInfo.version}, current version: ${this.currentVersion}`);
+      console.log(`Found version ${releaseInfo.version} (${releaseInfo.channel}), current version: ${this.currentVersion}`);
       
       // Compare versions to see if update is needed
       if (this.isNewerVersion(releaseInfo.version, this.currentVersion)) {
@@ -100,6 +156,39 @@ export class UpdateService {
       }
       
       return null;
+    }
+  }
+
+  // Get all releases for the current channel
+  async getAllReleases(): Promise<ReleaseInfo[]> {
+    try {
+      if (!electronService.isElectron) {
+        console.log('Update checking is only available in Electron app');
+        return [];
+      }
+
+      const releasesUrl = this.getReleasesUrl();
+      console.log(`Fetching all releases from: ${releasesUrl}`);
+
+      const response = await fetch(releasesUrl);
+      if (!response.ok) {
+        throw new Error(`Error fetching releases: ${response.statusText}`);
+      }
+
+      const releasesData = await response.json();
+      
+      // Map the response to our ReleaseInfo interface
+      return releasesData.map((release: any) => ({
+        version: release.tag_name.replace('v', ''),
+        url: this.getDownloadUrlForPlatform(release),
+        notes: release.body || 'No release notes available',
+        publishedAt: release.published_at,
+        mandatory: release.mandatory || false,
+        channel: release.channel || 'stable'
+      }));
+    } catch (error) {
+      console.error('Error fetching releases:', error);
+      return [];
     }
   }
 
@@ -159,8 +248,12 @@ export class UpdateService {
 
   // Compare versions (semver)
   private isNewerVersion(newVersion: string, currentVersion: string): boolean {
-    const newParts = newVersion.split('.').map(part => parseInt(part, 10));
-    const currentParts = currentVersion.split('.').map(part => parseInt(part, 10));
+    // Remove beta suffix for comparison, but keep it for display
+    const cleanNewVersion = newVersion.replace(/-beta.*$/, '');
+    const cleanCurrentVersion = currentVersion.replace(/-beta.*$/, '');
+
+    const newParts = cleanNewVersion.split('.').map(part => parseInt(part, 10));
+    const currentParts = cleanCurrentVersion.split('.').map(part => parseInt(part, 10));
 
     for (let i = 0; i < newParts.length; i++) {
       if (newParts[i] > (currentParts[i] || 0)) {
@@ -170,6 +263,17 @@ export class UpdateService {
         return false;
       }
     }
+    
+    // If versions are equal by numbers, check if new is beta and current is not
+    if (newVersion.includes('-beta') && !currentVersion.includes('-beta')) {
+      return false; // Don't consider a beta newer than a stable with same version
+    }
+    
+    // If current is beta but new is not, then new is newer
+    if (!newVersion.includes('-beta') && currentVersion.includes('-beta')) {
+      return true;
+    }
+    
     return false; // Versions are equal
   }
 }
