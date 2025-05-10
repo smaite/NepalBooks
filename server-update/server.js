@@ -69,6 +69,13 @@ app.post('/api/admin/login', (req, res) => {
     .update(password)
     .digest('hex');
 
+  console.log('Login attempt:', {
+    providedUsername: username,
+    providedPasswordHash: hashedPassword,
+    expectedUsername: ADMIN_CREDENTIALS.username,
+    expectedPasswordHash: ADMIN_CREDENTIALS.password
+  });
+
   // Check credentials
   if (
     username === ADMIN_CREDENTIALS.username &&

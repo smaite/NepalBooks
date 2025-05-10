@@ -7,7 +7,7 @@ const ADMIN_CREDENTIALS = {
 };
 
 // JWT secret for token generation
-const JWT_SECRET = 'your-secret-key-here'; // In production, use a strong random key
+const JWT_SECRET = 'nepalbooks-update-server-secret-key-2024'; // In production, use a strong random key
 
 module.exports = {
   ADMIN_CREDENTIALS,
