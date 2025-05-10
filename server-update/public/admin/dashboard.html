@@ -213,12 +213,6 @@
     </div>
 
     <script>
-        // Check authentication
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            window.location.href = '/admin.html';
-        }
-
         // Logout function
         function logout() {
             localStorage.removeItem('adminToken');
@@ -228,11 +222,7 @@
         // Load releases
         async function loadReleases() {
             try {
-                const response = await fetch('/api/updates/releases/all', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const response = await fetch('/api/updates/releases/all');
 
                 if (response.ok) {
                     const releases = await response.json();
@@ -282,8 +272,7 @@
                 const response = await fetch('/api/admin/publish', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         tag_name: `v${version}`,
