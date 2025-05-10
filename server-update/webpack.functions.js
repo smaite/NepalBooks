@@ -1,10 +1,13 @@
 const path = require('path');
 
 module.exports = {
-  optimization: { minimize: false },
-  resolve: {
-    extensions: ['.js', '.json'],
-    modules: [path.resolve(__dirname, 'node_modules')]
+  mode: 'production',
+  entry: './src/functions/updates.js',
+  target: 'node',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'functions.js',
+    libraryTarget: 'commonjs2'
   },
   module: {
     rules: [
@@ -14,9 +17,7 @@ module.exports = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [
-              ['@babel/preset-env', { targets: { node: '14' } }]
-            ]
+            presets: ['@babel/preset-env']
           }
         }
       }
