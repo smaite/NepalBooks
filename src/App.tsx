@@ -1,5 +1,5 @@
 import { AppShell, Navbar, Header, Burger, Group, Title, ActionIcon, useMantineColorScheme, Box, ThemeIcon, Text, Collapse, UnstyledButton } from '@mantine/core';
-import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { 
   IconSun, 
   IconMoonStars, 
@@ -25,6 +25,9 @@ import 'dayjs/locale/ne'; // Nepali locale
 import { useStore } from './store/useStore';
 import { electronService } from './services/ElectronService';
 import { UpdateNotification } from './components/common/UpdateNotification';
+import AdminLogin from './pages/AdminLogin';
+import AdminDashboard from './pages/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Import pages
 import Dashboard from './pages/Dashboard';
@@ -464,6 +467,22 @@ function AppContent() {
           {electronService.isDev && (
             <Route path="/admin/release-manager" element={<ReleaseManager />} />
           )}
+          {/* Public routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          {/* Protected admin routes */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="/dashboard" element={<AdminDashboard />} />
+                  {/* Add other admin routes here */}
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Box>
     </AppShell>
