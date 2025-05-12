@@ -33,7 +33,7 @@ const serverlessToExpress = (serverlessHandler) => async (req, res) => {
     }, {});
 
     // Set status code
-    res.status(result.statusCode);
+    res.status(result.statusCode || 200);
 
     // Set headers
     if (result.headers) {
@@ -57,17 +57,28 @@ const serverlessToExpress = (serverlessHandler) => async (req, res) => {
   }
 };
 
-// All routes are now public
-app.all('/api/updates/latest', serverlessToExpress(updatesHandler.handler));
-app.all('/api/updates/latest/:channel', serverlessToExpress(updatesHandler.handler));
-app.all('/api/updates/releases/:channel', serverlessToExpress(updatesHandler.handler));
-app.all('/api/updates/version/:version', serverlessToExpress(updatesHandler.handler));
-app.all('/api/admin/publish', serverlessToExpress(updatesHandler.handler));
-app.all('/api/admin/upload', serverlessToExpress(updatesHandler.handler));
+// API Routes
+app.get('/api/updates/latest', serverlessToExpress(updatesHandler.handler));
+app.get('/api/updates/latest/:channel', serverlessToExpress(updatesHandler.handler));
+app.get('/api/updates/releases/:channel', serverlessToExpress(updatesHandler.handler));
+app.get('/api/updates/version/:version', serverlessToExpress(updatesHandler.handler));
+app.post('/api/admin/publish', serverlessToExpress(updatesHandler.handler));
+app.post('/api/admin/upload', serverlessToExpress(updatesHandler.handler));
 
 // Redirect root to dashboard
 app.get('/', (req, res) => {
   res.redirect('/admin/dashboard.html');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
 });
 
 // Start server
