@@ -1,4 +1,4 @@
-import { AppShell, Navbar, Header, Burger, Group, Title, ActionIcon, useMantineColorScheme, Box, ThemeIcon, Text, Collapse, UnstyledButton } from '@mantine/core';
+import { AppShell, Navbar, Header, Burger, Group, Title, ActionIcon, useMantineColorScheme, Box, ThemeIcon, Text, Collapse, UnstyledButton, Image } from '@mantine/core';
 import { HashRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { 
   IconSun, 
@@ -28,6 +28,7 @@ import { UpdateNotification } from './components/common/UpdateNotification';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import { appConfig } from './config/appConfig';
 
 // Import pages
 import Dashboard from './pages/Dashboard';
@@ -371,12 +372,15 @@ function AppContent() {
         >
           <Navbar.Section>
             <Group position="apart" mb={30}>
-              <Title order={3} sx={(theme) => ({ 
-                color: dark ? theme.colors.blue[4] : theme.colors.blue[8],
-                fontWeight: 600
-              })}>
-                NepalBooks
-              </Title>
+              <Group>
+                <Image src={appConfig.logo.src} alt={appConfig.logo.alt} width={30} height={30} />
+                <Title order={3} sx={(theme) => ({ 
+                  color: dark ? theme.colors.blue[4] : theme.colors.blue[8],
+                  fontWeight: 600
+                })}>
+                  {appConfig.name}
+                </Title>
+              </Group>
             </Group>
           </Navbar.Section>
 
@@ -414,7 +418,7 @@ function AppContent() {
                   display: 'none',
                 },
               })}>
-                NepalBooks
+                {appConfig.name}
               </Title>
             </Group>
             <ActionIcon

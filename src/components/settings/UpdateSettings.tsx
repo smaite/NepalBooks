@@ -4,6 +4,7 @@ import { updateService } from '../../services/UpdateService';
 import type { UpdateChannel } from '../../services/UpdateService';
 import { IconInfoCircle, IconDownload, IconRefresh } from '@tabler/icons-react';
 import { electronService } from '../../services/ElectronService';
+import { appConfig } from '../../config/appConfig';
 
 interface ReleaseInfo {
   version: string;
@@ -90,7 +91,7 @@ export function UpdateSettings() {
         setCurrentVersion(appInfo.appVersion);
       } catch (err) {
         console.error('Error getting app info:', err);
-        setCurrentVersion(import.meta.env.VITE_APP_VERSION || '1.0.0');
+        setCurrentVersion(appConfig.version);
       }
     };
     
@@ -177,7 +178,7 @@ export function UpdateSettings() {
               </Badge>
             </Group>
             
-            <Text weight={500}>NepalBooks {update.version}</Text>
+            <Text weight={500}>{appConfig.name} {update.version}</Text>
             <Text size="sm">Published: {formatDate(update.publishedAt)}</Text>
             
             <Divider />
@@ -230,7 +231,7 @@ export function UpdateSettings() {
           {releases.map((release) => (
             <Paper key={release.version} p="md" withBorder>
               <Group position="apart">
-                <Text weight={500}>NepalBooks {release.version}</Text>
+                <Text weight={500}>{appConfig.name} {release.version}</Text>
                 <Badge color={release.channel === 'beta' ? 'orange' : 'blue'}>
                   {release.channel === 'beta' ? 'Beta' : 'Stable'}
                 </Badge>
