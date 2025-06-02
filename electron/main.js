@@ -25,6 +25,23 @@ function createWindow() {
   // Initialize the update handler
   const updateHandler = new UpdateHandler(mainWindow);
 
+  // Register IPC handlers
+  ipcMain.handle('download-update', (event, url) => {
+    return updateHandler.downloadUpdate(url);
+  });
+  
+  ipcMain.handle('check-for-updates', () => {
+    return updateHandler.checkForUpdates();
+  });
+  
+  ipcMain.handle('set-update-channel', (event, channel) => {
+    return updateHandler.setUpdateChannel(channel);
+  });
+  
+  ipcMain.handle('get-current-update-channel', () => {
+    return updateHandler.getCurrentUpdateChannel();
+  });
+
   // Load the app
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');

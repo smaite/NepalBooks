@@ -25,10 +25,10 @@ export class UpdateService {
   // GitHub server URL (can be used as fallback)
   private githubServerUrl: string = 'https://api.github.com/repos/yourusername/nepalbooks/releases/latest';
   
-  // Custom update server URL - updated to match the server-update implementation
+  // Custom update server URL - use environment variables
   private customServerUrl: string = import.meta.env.PROD 
-    ? 'https://up-books.netlify.app/api/updates' 
-    : 'http://localhost:3005/api/updates';
+    ? import.meta.env.VITE_UPDATE_SERVER_URL || 'https://mp.glorioustradehub.com/upd/api/updates'
+    : import.meta.env.VITE_UPDATE_SERVER_URL_DEV || 'http://localhost/nepalbooks/upd/api/updates';
   
   private currentVersion: string;
 
@@ -129,7 +129,7 @@ export class UpdateService {
       
       // Format the response to our ReleaseInfo interface
       const releaseInfo: ReleaseInfo = {
-        version: releaseData.tag_name?.replace('v', '') || '',
+        version: releaseData.version || releaseData.tag_name?.replace('v', '') || '',
         url: this.getDownloadUrlForPlatform(releaseData),
         notes: releaseData.body || 'No release notes available',
         publishedAt: releaseData.published_at || new Date().toISOString(),
@@ -179,7 +179,7 @@ export class UpdateService {
       
       // Map the response to our ReleaseInfo interface
       return releasesData.map((release: any) => ({
-        version: release.tag_name?.replace('v', '') || '',
+        version: release.version || release.tag_name?.replace('v', '') || '',
         url: this.getDownloadUrlForPlatform(release),
         notes: release.body || 'No release notes available',
         publishedAt: release.published_at || new Date().toISOString(),

@@ -34,6 +34,8 @@ contextBridge.exposeInMainWorld(
     
     // Update-related functions
     downloadUpdate: (url) => ipcRenderer.invoke('download-update', url),
-    checkForUpdates: () => ipcRenderer.invoke('check-for-updates')
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    setUpdateChannel: (channel) => ipcRenderer.invoke('set-update-channel', channel),
+    getCurrentUpdateChannel: () => ipcRenderer.invoke('get-current-update-channel')
   }
 ); 

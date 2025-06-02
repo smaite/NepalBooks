@@ -12,6 +12,7 @@ server-update.github.io
 release
 dist-ssr
 *.local
+upd
 
 # Editor directories and files
 .vscode/*
