@@ -1,5 +1,7 @@
 // Admin functionality for updates that can be exposed to the console
 
+import { appConfig } from '../config/appConfig';
+
 interface DownloadUrls {
   win?: string;
   mac?: string;
@@ -123,7 +125,7 @@ class UpdateAdmin {
     
     // Create title
     const title = document.createElement('h2');
-    title.textContent = 'NepalBooks Release Manager';
+    title.textContent = `${appConfig.name} Release Manager`;
     title.style.marginBottom = '20px';
     
     // Add form HTML
@@ -263,6 +265,6 @@ window.addEventListener('load', () => {
   // Double-check window.updateAdmin is correctly set
   if (!(window as any).updateAdmin) {
     (window as any).updateAdmin = updateAdmin;
-    console.log('NepalBooks Admin Panel is now available. Type updateAdmin.showAdminPanel() to access it.');
+    console.log(`${appConfig.name} Admin Panel is now available. Type updateAdmin.showAdminPanel() to access it.`);
   }
 }); 

@@ -1,6 +1,6 @@
-# NepalBooks Admin Access
+# Ledger Pro Admin Access
 
-This documentation explains how to access the admin functionality in NepalBooks application.
+This documentation explains how to access the admin functionality in Ledger Pro application.
 
 ## Development Mode Access
 
@@ -15,13 +15,13 @@ When running the application in development mode, you can access the admin panel
 2. **Keyboard Shortcut**
    - Press `Alt+Shift+A` to open the admin panel
 
-3. **NepalBooks Console Object**
+3. **Ledger Pro Console Object**
    ```javascript
    // For more options, try:
-   window.nepalbooks.help()
+   window.ledgerpro.help()
    
    // Or open admin panel directly:
-   window.nepalbooks.adminPanel()
+   window.ledgerpro.adminPanel()
    ```
 
 4. **Settings Page**
@@ -47,7 +47,7 @@ To access admin functionality in production:
 ## Authentication
 
 When using the admin panel, you'll need to authenticate with the admin password.
-The default password for development is: `admin-nepal-books`
+The default password for development is: `admin-ledger-pro`
 
 For production, please set a secure password in the server configuration.
 
@@ -63,5 +63,5 @@ The admin panel provides the following functionality:
 
 ## Update Server
 
-The admin panel connects to the update server at https://up-books.netlify.app/
+The admin panel connects to the update server at https://mp.glorioustradehub.com/upd/
 See the server documentation for more details on API endpoints and deployment. 

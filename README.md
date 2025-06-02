@@ -1,15 +1,14 @@
-# NepalBooks - Accounting Software for Nepali Businesses
+# Ledger Pro - Comprehensive Accounting Software
 
-A comprehensive accounting software designed specifically for Nepali businesses with VAT support, dark glassmorphic UI, and cross-platform capabilities.
+A comprehensive accounting software with a modern UI, inventory management, and cross-platform capabilities.
 
 ## Features
 
 - **Complete Accounting System**: Track income, expenses, sales, purchases, and taxes
-- **VAT Support**: Automated VAT calculation and reporting for Nepali businesses
 - **Dark Glassmorphic UI**: Modern interface with responsive design
 - **Dashboards & Analytics**: Real-time financial metrics and visualizations
 - **Inventory Management**: Track stock, purchases, and sales
-- **Multi-language**: Support for Nepali and English
+- **Multi-language**: Support for multiple languages
 - **Cross-platform**: Available on Web, Windows, macOS, and Linux
 - **Automatic Updates**: In-app update notification and installation
 
@@ -31,8 +30,8 @@ A comprehensive accounting software designed specifically for Nepali businesses 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/nepalbooks.git
-cd nepalbooks
+git clone https://github.com/yourusername/ledgerpro.git
+cd ledgerpro
 
 # Install dependencies
 npm install
@@ -56,7 +55,7 @@ npm run build:electron
 
 ## Update Server
 
-NepalBooks includes an automated update system for desktop applications. The update server is available at [https://up-books.netlify.app/](https://up-books.netlify.app/).
+Ledger Pro includes an automated update system for desktop applications. The update server is available at [https://mp.glorioustradehub.com/upd/](https://mp.glorioustradehub.com/upd/).
 
 ### Admin Console
 
@@ -83,4 +82,4 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For support, please contact [youremail@example.com](mailto:youremail@example.com) or open an issue on GitHub.
+For support, please contact [support@ledgerpro.com](mailto:support@ledgerpro.com) or open an issue on GitHub.

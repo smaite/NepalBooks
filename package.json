@@ -1,8 +1,8 @@
 {
-  "name": "nepalbooks",
-  "version": "1.0.1",
-  "description": "Accounting Software for Nepal",
-  "author": "NepalBooks",
+  "name": "ledgerpro",
+  "version": "1.1.2",
+  "description": "Ledger Pro - Comprehensive Accounting Software",
+  "author": "Radium Technologies",
   "private": true,
   "main": "electron/main.js",
   "homepage": "./",
@@ -41,8 +41,8 @@
     ]
   },
   "build": {
-    "appId": "com.nepalbooks.app",
-    "productName": "NepalBooks",
+    "appId": "com.ledgerpro.app",
+    "productName": "Ledger Pro",
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -67,7 +67,7 @@
     "publish": {
       "provider": "github",
       "owner": "yourusername",
-      "repo": "nepalbooks",
+      "repo": "ledgerpro",
       "releaseType": "release"
     }
   },

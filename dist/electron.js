@@ -107,11 +107,11 @@ function createWindow() {
           label: 'About',
           click() {
             dialog.showMessageBox(mainWindow, {
-              title: 'About NepalBooks',
-              message: 'NepalBooks - Accounting Software for Nepal',
-              detail: 'Version 1.0.0\nCopyright © 2023\n\nA comprehensive accounting solution designed for Nepali businesses.',
+              title: 'About Ledger Pro',
+              message: 'Ledger Pro - Accounting Software',
+              detail: 'Version 1.1.2\nCopyright © 2023-2024\n\nA comprehensive accounting solution for businesses.',
               buttons: ['OK'],
-              icon: path.join(__dirname, 'logo512.png')
+              icon: path.join(__dirname, 'ledgerpro_icon.png')
             });
           }
         }

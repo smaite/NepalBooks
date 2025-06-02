@@ -3,6 +3,7 @@
 import { updateAdmin } from './UpdateAdmin';
 import { initAdminHotkeys } from './AdminHotkeys';
 import { registerConsoleCommands } from './ConsoleCommands';
+import { appConfig } from '../config/appConfig';
 
 /**
  * Initialize the admin module and ensure updateAdmin is available globally
@@ -20,7 +21,7 @@ export function initAdminModule() {
     registerConsoleCommands();
     
     // Add a special command to the console
-    console.debug('NepalBooks admin module initialized');
+    console.debug(`${appConfig.name} admin module initialized`);
   }
 }
 
