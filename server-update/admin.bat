@@ -1,3 +1,0 @@
-@echo off
-echo Starting NepalBooks Update Server Admin Tool...
-node admin.js 

@@ -89,7 +89,7 @@ export function UpdateSettings() {
   // Format date
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('ne-NP', {
+      return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -101,30 +101,30 @@ export function UpdateSettings() {
 
   return (
     <Stack spacing="md">
-      <Title order={3}>अपडेट सेटिङहरू</Title>
+      <Title order={3}>Update Settings</Title>
       <Divider />
       
       <Paper p="md" withBorder>
         <Stack spacing="md">
-          <Title order={4}>अपडेट च्यानल</Title>
+          <Title order={4}>Update Channel</Title>
           
           <Radio.Group
             value={channel}
             onChange={(value) => handleChannelChange(value as UpdateChannel)}
             name="updateChannel"
-            label="तपाईंले प्राप्त गर्ने अपडेटहरू छनौट गर्नुहोस्:"
+            label="Choose which updates you receive:"
           >
             <Group mt="xs">
-              <Radio value="stable" label="स्थिर (Stable) - पूर्ण-परीक्षण गरिएका, उत्पादनको लागि तयार अपडेटहरू मात्र" />
-              <Radio value="beta" label="बिटा (Beta) - नयाँ सुविधाहरूसँग प्रारम्भिक अपडेटहरू, केही बगहरू हुन सक्छन्" />
+              <Radio value="stable" label="Stable - Only fully-tested updates ready for production" />
+              <Radio value="beta" label="Beta - Early updates with new features, may have some bugs" />
             </Group>
           </Radio.Group>
           
           <Group position="apart">
             <Text size="sm">
               {channel === 'stable' 
-                ? 'तपाईंले अहिले स्थिर च्यानलमा हुनुहुन्छ।' 
-                : 'तपाईंले अहिले बिटा च्यानलमा हुनुहुन्छ।'}
+                ? 'You are currently on the stable channel.' 
+                : 'You are currently on the beta channel.'}
             </Text>
             <Button 
               leftIcon={<IconRefresh size={16} />} 
@@ -132,14 +132,14 @@ export function UpdateSettings() {
               onClick={checkForUpdates}
               loading={checking}
             >
-              अपडेटहरू जाँच्नुहोस्
+              Check for Updates
             </Button>
           </Group>
         </Stack>
       </Paper>
       
       {error && (
-        <Alert color="red" icon={<IconInfoCircle />} title="त्रुटि">
+        <Alert color="red" icon={<IconInfoCircle />} title="Error">
           {error}
         </Alert>
       )}
@@ -148,19 +148,19 @@ export function UpdateSettings() {
         <Paper p="md" withBorder>
           <Stack spacing="sm">
             <Group position="apart">
-              <Title order={4}>नयाँ अपडेट उपलब्ध छ!</Title>
+              <Title order={4}>New Update Available!</Title>
               <Badge color={update.channel === 'beta' ? 'orange' : 'blue'}>
                 {update.channel === 'beta' ? 'Beta' : 'Stable'}
               </Badge>
             </Group>
             
             <Text weight={500}>NepalBooks {update.version}</Text>
-            <Text size="sm">प्रकाशित: {formatDate(update.publishedAt)}</Text>
+            <Text size="sm">Published: {formatDate(update.publishedAt)}</Text>
             
             <Divider />
             
             <Box>
-              <Text weight={500} mb="xs">परिवर्तनहरू:</Text>
+              <Text weight={500} mb="xs">Changes:</Text>
               <Paper p="xs" withBorder style={{ whiteSpace: 'pre-line' }}>
                 {update.notes}
               </Paper>
@@ -173,12 +173,12 @@ export function UpdateSettings() {
               loading={downloadingUpdate}
               disabled={!update.url}
             >
-              अपडेट डाउनलोड र स्थापना गर्नुहोस्
+              Download and Install Update
             </Button>
             
             {update.mandatory && (
-              <Alert color="red" title="अनिवार्य अपडेट">
-                यो अपडेट अनिवार्य छ र सफ्टवेयर प्रयोग गर्न जारी राख्न स्थापना गर्नुपर्छ।
+              <Alert color="red" title="Mandatory Update">
+                This update is mandatory and must be installed to continue using the software.
               </Alert>
             )}
           </Stack>
@@ -188,19 +188,19 @@ export function UpdateSettings() {
       {!update && !checking && (
         <Paper p="md" withBorder>
           <Text align="center" py="md">
-            तपाईं पहिले नै नवीनतम संस्करण प्रयोग गर्दै हुनुहुन्छ।
+            You are already using the latest version.
           </Text>
         </Paper>
       )}
       
       {/* Release History */}
-      <Title order={4} mt="lg">अपडेट इतिहास</Title>
+      <Title order={4} mt="lg">Update History</Title>
       <Divider />
       
       {loading ? (
         <Box py="xl" ta="center">
           <Loader />
-          <Text mt="md">रिलिज इतिहास लोड हुँदैछ...</Text>
+          <Text mt="md">Loading release history...</Text>
         </Box>
       ) : releases.length > 0 ? (
         <Stack spacing="md">
@@ -212,7 +212,7 @@ export function UpdateSettings() {
                   {release.channel === 'beta' ? 'Beta' : 'Stable'}
                 </Badge>
               </Group>
-              <Text size="sm">प्रकाशित: {formatDate(release.publishedAt)}</Text>
+              <Text size="sm">Published: {formatDate(release.publishedAt)}</Text>
               <Divider my="xs" />
               <Text size="sm" style={{ whiteSpace: 'pre-line' }}>{release.notes}</Text>
             </Paper>
@@ -221,7 +221,7 @@ export function UpdateSettings() {
       ) : (
         <Paper p="md" withBorder>
           <Text align="center" py="md">
-            कुनै रिलिज इतिहास उपलब्ध छैन।
+            No release history available.
           </Text>
         </Paper>
       )}
