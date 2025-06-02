@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Box, Group, Text, Radio, Button, Divider, Paper, Stack, Title, Alert, Loader, Badge } from '@mantine/core';
+import { Box, Group, Text, Radio, Button, Divider, Paper, Stack, Title, Alert, Loader, Badge, Code } from '@mantine/core';
 import { updateService } from '../../services/UpdateService';
 import type { UpdateChannel } from '../../services/UpdateService';
 import { IconInfoCircle, IconDownload, IconRefresh } from '@tabler/icons-react';
+import { electronService } from '../../services/ElectronService';
 
 interface ReleaseInfo {
   version: string;
@@ -21,6 +22,7 @@ export function UpdateSettings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadingUpdate, setDownloadingUpdate] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState<string>('');
 
   // Handle channel change
   const handleChannelChange = (value: UpdateChannel) => {
@@ -80,6 +82,21 @@ export function UpdateSettings() {
     }
   };
 
+  // Get current version on mount
+  useEffect(() => {
+    const getAppInfo = async () => {
+      try {
+        const appInfo = electronService.getAppInfo();
+        setCurrentVersion(appInfo.appVersion);
+      } catch (err) {
+        console.error('Error getting app info:', err);
+        setCurrentVersion(import.meta.env.VITE_APP_VERSION || '1.0.0');
+      }
+    };
+    
+    getAppInfo();
+  }, []);
+
   // Check for updates on mount and when channel changes
   useEffect(() => {
     checkForUpdates();
@@ -101,7 +118,13 @@ export function UpdateSettings() {
 
   return (
     <Stack spacing="md">
-      <Title order={3}>Update Settings</Title>
+      <Group position="apart">
+        <Title order={3}>Update Settings</Title>
+        <Group spacing="xs">
+          <Text size="sm" color="dimmed">Current Version:</Text>
+          <Code>{currentVersion}</Code>
+        </Group>
+      </Group>
       <Divider />
       
       <Paper p="md" withBorder>
