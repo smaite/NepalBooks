@@ -1,0 +1,12 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background rounded square -->
+  <rect x="10" y="10" width="180" height="180" rx="30" fill="none" stroke="#0A3D66" stroke-width="12"/>
+
+  <!-- Bar chart -->
+  <rect x="50" y="100" width="20" height="50" fill="#0A3D66"/>
+  <rect x="90" y="70" width="20" height="80" fill="#0A3D66"/>
+  <rect x="130" y="40" width="20" height="110" fill="#0A3D66"/>
+
+  <!-- Checkmark -->
+  <path d="M60 140 L85 165 L145 95" stroke="#2CA58D" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
