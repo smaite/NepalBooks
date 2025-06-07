@@ -13,7 +13,8 @@ function createWindow() {
     width: 1200,
     height: 800,
     icon: path.join(__dirname, 'ledgerpro_icon.png'),
-    frame: false, // Frameless window
+    frame: true, // Standard window frame with default controls
+    titleBarStyle: 'default',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -102,6 +103,15 @@ function createWindow() {
       ]
     },
     {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { type: 'separator' },
+        { role: 'close' }
+      ]
+    },
+    {
       label: 'Help',
       submenu: [
         {
@@ -144,6 +154,25 @@ app.on('activate', function () {
 
 // Handle IPC messages from renderer process
 
+// Window control handlers
+ipcMain.on('window-minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on('window-close', () => {
+  if (mainWindow) mainWindow.close();
+});
+
 // Save file dialog
 ipcMain.handle('show-save-dialog', async (event, options) => {
   const { canceled, filePath } = await dialog.showSaveDialog(options);
@@ -183,33 +212,4 @@ ipcMain.handle('write-file', async (event, filePath, data) => {
     console.error('Error writing file:', error);
     return false;
   }
-});
-
-// Window control handlers
-ipcMain.handle('window-minimize', () => {
-  if (mainWindow) mainWindow.minimize();
-  return true;
-});
-
-ipcMain.handle('window-maximize', () => {
-  if (mainWindow) {
-    if (mainWindow.isMaximized()) {
-      mainWindow.unmaximize();
-      return false;
-    } else {
-      mainWindow.maximize();
-      return true;
-    }
-  }
-  return false;
-});
-
-ipcMain.handle('window-close', () => {
-  if (mainWindow) mainWindow.close();
-  return true;
-});
-
-ipcMain.handle('window-is-maximized', () => {
-  if (mainWindow) return mainWindow.isMaximized();
-  return false;
 }); 

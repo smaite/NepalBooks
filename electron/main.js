@@ -19,7 +19,7 @@ function createWindow() {
     },
     backgroundColor: '#1a1b1e',
     titleBarStyle: 'hidden',
-    frame: false,
+    frame: true,
   });
 
   // Initialize the update handler

@@ -42,10 +42,9 @@ contextBridge.exposeInMainWorld(
     },
     
     // Window controls
-    minimizeWindow: () => ipcRenderer.invoke('window-minimize'),
-    maximizeWindow: () => ipcRenderer.invoke('window-maximize'),
-    closeWindow: () => ipcRenderer.invoke('window-close'),
-    isWindowMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+    minimizeWindow: () => ipcRenderer.send('window-minimize'),
+    maximizeWindow: () => ipcRenderer.send('window-maximize'),
+    closeWindow: () => ipcRenderer.send('window-close'),
     
     // App info
     getAppInfo: () => {

@@ -18,8 +18,7 @@ import {
   IconChevronRight,
   IconMinus,
   IconSquare,
-  IconX,
-  IconSquareCheck
+  IconX
 } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { Notifications } from '@mantine/notifications';
@@ -176,7 +175,27 @@ function AppContent() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
   const { initDatabase, exportData, importData } = useStore();
-  const [isMaximized, setIsMaximized] = useState(false);
+
+  // Window control functions
+  const handleMinimize = () => {
+    if (electronService.isElectron) {
+      window.electron?.ipcRenderer?.send('window-minimize');
+    }
+  };
+
+  const handleMaximize = () => {
+    if (electronService.isElectron) {
+      window.electron?.ipcRenderer?.send('window-maximize');
+    }
+  };
+
+  const handleClose = () => {
+    if (electronService.isElectron) {
+      window.electron?.ipcRenderer?.send('window-close');
+    } else {
+      window.close();
+    }
+  };
 
   // Initialize database and set up Electron event listeners
   useEffect(() => {
@@ -244,32 +263,6 @@ function AppContent() {
       });
     }
   }, [initDatabase, exportData, importData]);
-
-  // Check if window is maximized on mount and when it changes
-  useEffect(() => {
-    const checkMaximized = async () => {
-      if (electronService.isElectron) {
-        const maximized = await electronService.isWindowMaximized();
-        setIsMaximized(maximized);
-      }
-    };
-    
-    checkMaximized();
-  }, []);
-
-  // Window control handlers
-  const handleMinimize = () => {
-    electronService.minimizeWindow();
-  };
-
-  const handleMaximize = async () => {
-    const maximized = await electronService.maximizeWindow();
-    setIsMaximized(maximized);
-  };
-
-  const handleClose = () => {
-    electronService.closeWindow();
-  };
 
   const mainNavItems: NavItem[] = [
     {
@@ -434,7 +427,6 @@ function AppContent() {
               : theme.fn.rgba(theme.colors.gray[0], 0.85),
             backdropFilter: 'blur(10px)',
             borderBottom: `1px solid ${dark ? theme.colors.dark[5] : theme.colors.gray[2]}`,
-            WebkitAppRegion: 'drag', // Make header draggable
           })}
         >
           <Group position="apart" sx={{ height: '100%' }}>
@@ -444,7 +436,6 @@ function AppContent() {
                 onClick={() => setOpened((o) => !o)}
                 size="sm"
                 color={dark ? 'white' : 'black'}
-                sx={{ WebkitAppRegion: 'no-drag' }} // Make burger button clickable
               />
               <Title order={3} sx={(theme) => ({ 
                 color: dark ? theme.colors.blue[4] : theme.colors.blue[8],
@@ -457,7 +448,7 @@ function AppContent() {
               </Title>
             </Group>
             
-            <Group spacing={5} sx={{ WebkitAppRegion: 'no-drag' }}> {/* Make buttons clickable */}
+            <Group>
               <ActionIcon
                 variant="light"
                 color={dark ? 'yellow' : 'blue'}
@@ -468,59 +459,6 @@ function AppContent() {
               >
                 {dark ? <IconSun size="1.2rem" /> : <IconMoonStars size="1.2rem" />}
               </ActionIcon>
-              
-              {electronService.isElectron && (
-                <Group spacing={0}>
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    onClick={handleMinimize}
-                    title="Minimize"
-                    size="lg"
-                    radius={0}
-                    sx={(theme) => ({
-                      '&:hover': {
-                        backgroundColor: theme.fn.rgba(theme.colors.blue[4], 0.1),
-                      }
-                    })}
-                  >
-                    <IconMinus size="1.2rem" />
-                  </ActionIcon>
-                  
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    onClick={handleMaximize}
-                    title={isMaximized ? "Restore" : "Maximize"}
-                    size="lg"
-                    radius={0}
-                    sx={(theme) => ({
-                      '&:hover': {
-                        backgroundColor: theme.fn.rgba(theme.colors.blue[4], 0.1),
-                      }
-                    })}
-                  >
-                    {isMaximized ? <IconSquareCheck size="1.2rem" /> : <IconSquare size="1.2rem" />}
-                  </ActionIcon>
-                  
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    onClick={handleClose}
-                    title="Close"
-                    size="lg"
-                    radius={0}
-                    sx={(theme) => ({
-                      '&:hover': {
-                        backgroundColor: theme.colors.red[7],
-                        color: 'white',
-                      }
-                    })}
-                  >
-                    <IconX size="1.2rem" />
-                  </ActionIcon>
-                </Group>
-              )}
             </Group>
           </Group>
         </Header>

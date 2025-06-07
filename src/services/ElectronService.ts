@@ -8,10 +8,6 @@ export interface ElectronAPI {
   on: (channel: string, callback: (...args: unknown[]) => void) => void;
   downloadUpdate: (url: string) => Promise<boolean>;
   checkForUpdates: () => Promise<{ hasUpdate: boolean; version: string; downloadUrl: string }>;
-  minimizeWindow: () => Promise<boolean>;
-  maximizeWindow: () => Promise<boolean>;
-  closeWindow: () => Promise<boolean>;
-  isWindowMaximized: () => Promise<boolean>;
 }
 
 export interface SaveDialogOptions {
@@ -115,34 +111,6 @@ class ElectronService {
       return await this.electron!.checkForUpdates();
     }
     return { hasUpdate: false, version: '', downloadUrl: '' };
-  }
-
-  async minimizeWindow(): Promise<boolean> {
-    if (this.isElectron) {
-      return await this.electron!.minimizeWindow();
-    }
-    return false;
-  }
-
-  async maximizeWindow(): Promise<boolean> {
-    if (this.isElectron) {
-      return await this.electron!.maximizeWindow();
-    }
-    return false;
-  }
-
-  async closeWindow(): Promise<boolean> {
-    if (this.isElectron) {
-      return await this.electron!.closeWindow();
-    }
-    return false;
-  }
-
-  async isWindowMaximized(): Promise<boolean> {
-    if (this.isElectron) {
-      return await this.electron!.isWindowMaximized();
-    }
-    return false;
   }
 }
 
