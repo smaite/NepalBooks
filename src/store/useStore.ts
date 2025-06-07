@@ -57,6 +57,13 @@ export interface Transaction {
   description: string;
 }
 
+export interface PaymentMethod {
+  id: string;
+  name: string;
+  isActive: boolean;
+  description: string;
+}
+
 export interface Settings {
   businessName: string;
   address: string;
@@ -82,6 +89,7 @@ interface StoreState {
   customers: Customer[];
   suppliers: Supplier[];
   transactions: Transaction[];
+  paymentMethods: PaymentMethod[];
   settings: Settings;
   dbService: DatabaseService | null;
   
@@ -106,6 +114,10 @@ interface StoreState {
   updateTransaction: (id: string, transaction: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   
+  addPaymentMethod: (paymentMethod: Omit<PaymentMethod, 'id'>) => void;
+  updatePaymentMethod: (id: string, paymentMethod: Partial<PaymentMethod>) => void;
+  deletePaymentMethod: (id: string) => void;
+  
   updateSettings: (settings: Partial<Settings>) => void;
   initDatabase: () => Promise<void>;
   syncWithDatabase: () => Promise<void>;
@@ -120,6 +132,7 @@ interface ExportData {
   customers: Customer[];
   suppliers: Supplier[];
   transactions: Transaction[];
+  paymentMethods: PaymentMethod[];
 }
 
 export const useStore = create<StoreState>()(
@@ -130,6 +143,12 @@ export const useStore = create<StoreState>()(
       customers: [],
       suppliers: [],
       transactions: [],
+      paymentMethods: [
+        { id: 'cash', name: 'Cash', isActive: true, description: 'Cash payment' },
+        { id: 'bank', name: 'Bank Transfer', isActive: true, description: 'Direct bank transfer' },
+        { id: 'credit', name: 'Credit', isActive: true, description: 'Purchase on credit' },
+        { id: 'cheque', name: 'Cheque', isActive: true, description: 'Payment by cheque' }
+      ],
       settings: {
         businessName: 'NepalBooks',
         address: 'Kathmandu, Nepal',
@@ -259,6 +278,26 @@ export const useStore = create<StoreState>()(
         get().syncWithDatabase();
       },
 
+      addPaymentMethod: (paymentMethod) => {
+        const newPaymentMethod = { ...paymentMethod, id: uuidv4() };
+        set((state) => ({ paymentMethods: [...state.paymentMethods, newPaymentMethod] }));
+        get().syncWithDatabase();
+      },
+      
+      updatePaymentMethod: (id, paymentMethod) => {
+        set((state) => ({
+          paymentMethods: state.paymentMethods.map((p) => (p.id === id ? { ...p, ...paymentMethod } : p)),
+        }));
+        get().syncWithDatabase();
+      },
+      
+      deletePaymentMethod: (id) => {
+        set((state) => ({
+          paymentMethods: state.paymentMethods.filter((p) => p.id !== id),
+        }));
+        get().syncWithDatabase();
+      },
+
       updateSettings: (newSettings) => {
         set((state) => ({
           settings: { ...state.settings, ...newSettings },
@@ -323,26 +362,28 @@ export const useStore = create<StoreState>()(
         }
       },
 
-      exportData: async (data, isBackup = false) => {
+      exportData: async (data: ExportData, isBackup = false): Promise<string | null> => {
         const { dbService } = get();
         if (dbService) {
-          return await dbService.exportData(data);
+          return await dbService.exportData(data, isBackup);
         }
-        return 'Database service not initialized.';
+        return null;
       },
 
-      importData: async (isRestore = false) => {
+      importData: async (isRestore = false): Promise<ExportData | null> => {
         const { dbService } = get();
         if (dbService) {
-          const data = await dbService.importData();
+          const data = await dbService.importData(isRestore);
           if (data) {
-            // Update the store with imported data
-            set({
-              items: data.items || [],
-              categories: data.categories || [],
+            // Make sure we handle the case where paymentMethods might not exist in older data
+            const paymentMethods = data.paymentMethods || get().paymentMethods;
+            set({ 
+              items: data.items || [], 
+              categories: data.categories || [], 
               customers: data.customers || [],
               suppliers: data.suppliers || [],
               transactions: data.transactions || [],
+              paymentMethods
             });
             return data;
           }

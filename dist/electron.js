@@ -23,6 +23,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: false, // Allow loading local resources
       preload: path.join(__dirname, 'preload.js')
     },
   });
@@ -31,16 +32,46 @@ function createWindow() {
   mainWindow.setIcon(path.join(__dirname, 'ledgerpro_icon.png'));
 
   // Load the app
-  const startUrl = isDev
-    ? 'http://localhost:3000'
-    : `file://${path.join(__dirname, '../dist/index.html')}`;
-    
-  console.log('Loading URL:', startUrl);
-  mainWindow.loadURL(startUrl);
-
-  // Open DevTools if in development
   if (isDev) {
-    mainWindow.webContents.openDevTools();
+    // Try different ports if 3000 is not available
+    const ports = [3000, 3001, 3002, 3003, 3004, 3005];
+    let loadedSuccessfully = false;
+    
+    // Try each port in sequence
+    const tryLoadPort = (index) => {
+      if (index >= ports.length) {
+        console.error('Failed to load development server on any port');
+        return;
+      }
+      
+      const port = ports[index];
+      const url = `http://localhost:${port}`;
+      
+      console.log(`Trying to load from ${url}`);
+      
+      // Try to load the URL
+      mainWindow.loadURL(url)
+        .then(() => {
+          console.log(`Successfully loaded from ${url}`);
+          loadedSuccessfully = true;
+          
+          // Open DevTools if in development
+          if (isDev) {
+            mainWindow.webContents.openDevTools();
+          }
+        })
+        .catch(err => {
+          console.log(`Failed to load from ${url}:`, err);
+          // Try the next port
+          tryLoadPort(index + 1);
+        });
+    };
+    
+    tryLoadPort(0);
+  } else {
+    const startUrl = `file://${path.join(__dirname, '../dist/index.html')}`;
+    console.log('Loading URL:', startUrl);
+    mainWindow.loadURL(startUrl);
   }
 
   // Create menu

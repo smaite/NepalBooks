@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Title,
   TextInput,
@@ -11,7 +11,6 @@ import {
   Card,
   Modal,
   Switch,
-  Box,
   ScrollArea
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
@@ -23,13 +22,6 @@ import {
 } from '@tabler/icons-react';
 import { useStore } from '../store/useStore';
 
-interface PaymentMethod {
-  id: string;
-  name: string;
-  isActive: boolean;
-  description: string;
-}
-
 interface PaymentMethodFormValues {
   name: string;
   isActive: boolean;
@@ -37,13 +29,7 @@ interface PaymentMethodFormValues {
 }
 
 const PaymentMethods = () => {
-  // In a real app, this would come from the store
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { id: 'cash', name: 'Cash', isActive: true, description: 'Cash payment' },
-    { id: 'bank', name: 'Bank Transfer', isActive: true, description: 'Direct bank transfer' },
-    { id: 'credit', name: 'Credit', isActive: true, description: 'Purchase on credit' },
-    { id: 'cheque', name: 'Cheque', isActive: true, description: 'Payment by cheque' }
-  ]);
+  const { paymentMethods, addPaymentMethod, updatePaymentMethod, deletePaymentMethod } = useStore();
   
   const [opened, setOpened] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -62,18 +48,10 @@ const PaymentMethods = () => {
   const handleSubmit = (values: PaymentMethodFormValues) => {
     if (editingId) {
       // Update existing payment method
-      setPaymentMethods(paymentMethods.map(method => 
-        method.id === editingId 
-          ? { ...method, ...values } 
-          : method
-      ));
+      updatePaymentMethod(editingId, values);
     } else {
       // Add new payment method
-      const newMethod: PaymentMethod = {
-        id: crypto.randomUUID(),
-        ...values
-      };
-      setPaymentMethods([...paymentMethods, newMethod]);
+      addPaymentMethod(values);
     }
     
     // Close modal and reset form
@@ -97,16 +75,15 @@ const PaymentMethods = () => {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this payment method?')) {
-      setPaymentMethods(paymentMethods.filter(method => method.id !== id));
+      deletePaymentMethod(id);
     }
   };
 
   const handleToggleActive = (id: string) => {
-    setPaymentMethods(paymentMethods.map(method => 
-      method.id === id 
-        ? { ...method, isActive: !method.isActive } 
-        : method
-    ));
+    const method = paymentMethods.find(m => m.id === id);
+    if (method) {
+      updatePaymentMethod(id, { isActive: !method.isActive });
+    }
   };
 
   return (

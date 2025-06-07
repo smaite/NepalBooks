@@ -21,7 +21,8 @@ import {
   SimpleGrid,
   Autocomplete,
   Tooltip,
-  ScrollArea
+  ScrollArea,
+  Alert
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
@@ -33,7 +34,8 @@ import {
   IconPrinter,
   IconX,
   IconSearch,
-  IconCalculator
+  IconCalculator,
+  IconAlertCircle
 } from '@tabler/icons-react';
 import { useStore } from '../store/useStore';
 import { formatCurrency } from '../utils/formatters';
@@ -65,30 +67,19 @@ interface PurchaseFormValues {
 }
 
 const NewPurchase = () => {
-  const { items, suppliers, settings } = useStore();
+  const { items, suppliers, settings, paymentMethods } = useStore();
   const [selectedItems, setSelectedItems] = useState<PurchaseItem[]>([]);
   const [itemSearchValue, setItemSearchValue] = useState('');
   const [addingItem, setAddingItem] = useState(false);
 
-  // Debug logs
-  console.log('Items from store:', items);
-  console.log('Suppliers from store:', suppliers);
-  console.log('Settings from store:', settings);
-
-  // Mock data for testing if store is empty
-  const mockItems = items.length > 0 ? items : [
-    { id: 'item1', name: 'Laptop', code: 'LAP001', category: 'Electronics', unit: 'piece', costPrice: 1200, sellingPrice: 1500, vatRate: 13, stockQuantity: 10, minStockLevel: 2, description: 'High-end laptop' },
-    { id: 'item2', name: 'Mouse', code: 'MOU001', category: 'Electronics', unit: 'piece', costPrice: 25, sellingPrice: 35, vatRate: 13, stockQuantity: 20, minStockLevel: 5, description: 'Wireless mouse' }
-  ];
-
-  const mockSuppliers = suppliers.length > 0 ? suppliers : [
-    { id: 'sup1', name: 'ABC Suppliers', contactPerson: 'John Doe', email: 'john@abc.com', phone: '123-456-7890', address: 'Kathmandu', vatNumber: '123456', balance: 0 },
-    { id: 'sup2', name: 'XYZ Distributors', contactPerson: 'Jane Smith', email: 'jane@xyz.com', phone: '987-654-3210', address: 'Pokhara', vatNumber: '654321', balance: 0 }
-  ];
-
-  // Use mock data if store is empty
-  const itemsToUse = mockItems;
-  const suppliersToUse = mockSuppliers;
+  // Generate a unique invoice number
+  function generateInvoiceNumber() {
+    const prefix = 'PUR';
+    const date = new Date();
+    const timestamp = date.getTime().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}-${timestamp}-${random}`;
+  }
 
   const form = useForm<PurchaseFormValues>({
     initialValues: {
@@ -110,15 +101,6 @@ const NewPurchase = () => {
     },
   });
 
-  // Generate a unique invoice number
-  function generateInvoiceNumber() {
-    const prefix = 'PUR';
-    const date = new Date();
-    const timestamp = date.getTime().toString().slice(-6);
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `${prefix}-${timestamp}-${random}`;
-  }
-
   // Calculate totals whenever selected items change
   useEffect(() => {
     if (selectedItems.length > 0) {
@@ -139,7 +121,7 @@ const NewPurchase = () => {
   }, [selectedItems]);
 
   const handleItemSelect = (itemName: string) => {
-    const selectedItem = itemsToUse.find(item => item.name === itemName);
+    const selectedItem = items.find(item => item.name === itemName);
     if (selectedItem) {
       setAddingItem(true);
       const newItem: PurchaseItem = {
@@ -221,18 +203,19 @@ const NewPurchase = () => {
   };
 
   // Get supplier options
-  const supplierOptions = suppliersToUse.map(supplier => ({
+  const supplierOptions = suppliers.map(supplier => ({
     value: supplier.id,
     label: supplier.name
   }));
 
-  // Payment method options
-  const paymentMethodOptions = [
-    { value: 'cash', label: 'Cash' },
-    { value: 'bank', label: 'Bank Transfer' },
-    { value: 'credit', label: 'Credit' },
-    { value: 'cheque', label: 'Cheque' }
-  ];
+  // Filter payment methods to only show active ones
+  const activePaymentMethods = paymentMethods.filter(method => method.isActive);
+
+  // Payment method options from store
+  const paymentMethodOptions = activePaymentMethods.map(method => ({ 
+    value: method.id, 
+    label: method.name 
+  }));
 
   // Status options
   const statusOptions = [
@@ -263,10 +246,17 @@ const NewPurchase = () => {
         </Group>
       </Group>
 
-      {/* Test element to check rendering */}
-      <Card withBorder shadow="sm" radius="md" p="md" mb="md" style={{ backgroundColor: 'red' }}>
-        <Text size="xl" weight={700} color="white">TEST ELEMENT - If you can see this, the component is rendering</Text>
-      </Card>
+      {suppliers.length === 0 && (
+        <Alert icon={<IconAlertCircle size="1rem" />} title="No suppliers found" color="yellow">
+          You need to add suppliers before creating a purchase. Go to the Suppliers page to add suppliers.
+        </Alert>
+      )}
+
+      {items.length === 0 && (
+        <Alert icon={<IconAlertCircle size="1rem" />} title="No items found" color="yellow">
+          You need to add items before creating a purchase. Go to the Items page to add items.
+        </Alert>
+      )}
 
       <form id="purchase-form" onSubmit={form.onSubmit(handleSubmit)}>
         <Card withBorder shadow="sm" radius="md" p="md" mb="md">
@@ -288,6 +278,7 @@ const NewPurchase = () => {
               data={supplierOptions}
               searchable
               required
+              disabled={suppliers.length === 0}
               {...form.getInputProps('supplier')}
             />
             <Select
@@ -312,11 +303,11 @@ const NewPurchase = () => {
               placeholder="Search and add items..."
               value={itemSearchValue}
               onChange={setItemSearchValue}
-              data={itemsToUse.map(item => item.name)}
+              data={items.map(item => item.name)}
               onItemSubmit={({ value }) => handleItemSelect(value)}
               icon={<IconSearch size="1rem" />}
               style={{ width: '60%' }}
-              disabled={addingItem}
+              disabled={addingItem || items.length === 0}
             />
           </Group>
 

@@ -46,6 +46,7 @@ import StockAdjustment from './pages/StockAdjustment';
 import NewPurchase from './pages/NewPurchase';
 import PurchaseList from './pages/PurchaseList';
 import PurchaseReturn from './pages/PurchaseReturn';
+import PurchaseReturnList from './pages/PurchaseReturnList';
 import PaymentMethods from './pages/PaymentMethods';
 import { ReleaseManager } from './components/admin/ReleaseManager';
 
@@ -202,8 +203,8 @@ function AppContent() {
     if (electronService.isElectron) {
       // Export data when triggered from the menu
       electronService.on('menu-export-data', () => {
-        const { items, categories, customers, suppliers, transactions } = useStore.getState();
-        exportData({ items, categories, customers, suppliers, transactions })
+        const { items, categories, customers, suppliers, transactions, paymentMethods } = useStore.getState();
+        exportData({ items, categories, customers, suppliers, transactions, paymentMethods })
           .then((message) => {
             if (message) {
               alert(message);
@@ -231,8 +232,8 @@ function AppContent() {
 
       // Backup data when triggered from the menu
       electronService.on('menu-backup', () => {
-        const { items, categories, customers, suppliers, transactions } = useStore.getState();
-        exportData({ items, categories, customers, suppliers, transactions }, true)
+        const { items, categories, customers, suppliers, transactions, paymentMethods } = useStore.getState();
+        exportData({ items, categories, customers, suppliers, transactions, paymentMethods }, true)
           .then((message) => {
             if (message) {
               alert(message);
@@ -286,7 +287,8 @@ function AppContent() {
       links: [
         { label: 'New Purchase', path: '/purchase/new' },
         { label: 'Purchase List', path: '/purchase/list' },
-        { label: 'Return', path: '/purchase/return' },
+        { label: 'New Return', path: '/purchase/return' },
+        { label: 'Return List', path: '/purchase/return/list' },
       ],
     },
     {
@@ -547,6 +549,7 @@ function AppContent() {
           <Route path="/purchase/new" element={<NewPurchase />} />
           <Route path="/purchase/list" element={<PurchaseList />} />
           <Route path="/purchase/return" element={<PurchaseReturn />} />
+          <Route path="/purchase/return/list" element={<PurchaseReturnList />} />
           {/* Placeholder routes for new sections */}
           <Route path="/sales/new" element={<div><Title order={2}>New Sale</Title></div>} />
           <Route path="/sales/list" element={<div><Title order={2}>Sales List</Title></div>} />

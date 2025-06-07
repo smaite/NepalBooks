@@ -1,4 +1,4 @@
-import type { Settings, Item, Customer, Supplier, Transaction, Category } from '../store/useStore';
+import type { Settings, Item, Customer, Supplier, Transaction, Category, PaymentMethod } from '../store/useStore';
 import { electronService } from './ElectronService';
 
 interface StoredData {
@@ -7,6 +7,7 @@ interface StoredData {
   customers: Customer[];
   suppliers: Supplier[];
   transactions: Transaction[];
+  paymentMethods: PaymentMethod[];
 }
 
 export class DatabaseService {
@@ -18,6 +19,7 @@ export class DatabaseService {
     customers: [],
     suppliers: [],
     transactions: [],
+    paymentMethods: [],
   };
   private dataFilePath: string | null = null;
 
@@ -95,43 +97,43 @@ export class DatabaseService {
     }
   }
 
-  async exportData(data: StoredData): Promise<string | null> {
+  async exportData(data: StoredData, isBackup = false): Promise<string | null> {
     try {
       if (electronService.isElectron) {
         // Using Electron
         const options = {
-          title: 'Export NepalBooks Data',
-          defaultPath: 'nepalbooks-data.json',
+          title: isBackup ? 'Backup NepalBooks Data' : 'Export NepalBooks Data',
+          defaultPath: isBackup ? 'nepalbooks-backup.json' : 'nepalbooks-data.json',
           filters: [
             { name: 'JSON Files', extensions: ['json'] }
           ]
         };
         
         const result = await electronService.saveFile(options, JSON.stringify(data, null, 2));
-        return result ? 'Data exported successfully.' : 'Export cancelled.';
+        return result ? (isBackup ? 'Backup created successfully.' : 'Data exported successfully.') : (isBackup ? 'Backup cancelled.' : 'Export cancelled.');
       } else {
         // Fallback for browser
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "nepalbooks-data.json");
+        downloadAnchorNode.setAttribute("download", isBackup ? 'nepalbooks-backup.json' : 'nepalbooks-data.json');
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
-        return 'Data exported successfully.';
+        return isBackup ? 'Backup created successfully.' : 'Data exported successfully.';
       }
     } catch (error) {
-      console.error('Failed to export data:', error);
-      return 'Failed to export data.';
+      console.error(isBackup ? 'Failed to create backup:' : 'Failed to export data:', error);
+      return isBackup ? 'Failed to create backup.' : 'Failed to export data.';
     }
   }
   
-  async importData(): Promise<StoredData | null> {
+  async importData(isRestore = false): Promise<StoredData | null> {
     try {
       if (electronService.isElectron) {
         // Using Electron
         const options = {
-          title: 'Import NepalBooks Data',
+          title: isRestore ? 'Restore NepalBooks Data' : 'Import NepalBooks Data',
           filters: [
             { name: 'JSON Files', extensions: ['json'] }
           ],
@@ -140,7 +142,19 @@ export class DatabaseService {
         
         const result = await electronService.openFile(options);
         if (result && result.content) {
-          return JSON.parse(result.content) as StoredData;
+          const parsedData = JSON.parse(result.content) as StoredData;
+          
+          // Ensure paymentMethods exists (for backward compatibility)
+          if (!parsedData.paymentMethods) {
+            parsedData.paymentMethods = [
+              { id: 'cash', name: 'Cash', isActive: true, description: 'Cash payment' },
+              { id: 'bank', name: 'Bank Transfer', isActive: true, description: 'Direct bank transfer' },
+              { id: 'credit', name: 'Credit', isActive: true, description: 'Purchase on credit' },
+              { id: 'cheque', name: 'Cheque', isActive: true, description: 'Payment by cheque' }
+            ];
+          }
+          
+          return parsedData;
         }
         return null;
       } else {
@@ -149,7 +163,7 @@ export class DatabaseService {
         return null;
       }
     } catch (error) {
-      console.error('Failed to import data:', error);
+      console.error(isRestore ? 'Failed to restore data:' : 'Failed to import data:', error);
       return null;
     }
   }

@@ -16,6 +16,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: false // Allow loading local resources
     },
     backgroundColor: '#1a1b1e',
     titleBarStyle: 'default',
@@ -45,8 +46,37 @@ function createWindow() {
 
   // Load the app
   if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
+    // Try different ports if 3000 is not available
+    const ports = [3000, 3001, 3002, 3003, 3004, 3005];
+    let loadedSuccessfully = false;
+    
+    // Try each port in sequence
+    const tryLoadPort = (index) => {
+      if (index >= ports.length) {
+        console.error('Failed to load development server on any port');
+        return;
+      }
+      
+      const port = ports[index];
+      const url = `http://localhost:${port}`;
+      
+      console.log(`Trying to load from ${url}`);
+      
+      // Try to load the URL
+      mainWindow.loadURL(url)
+        .then(() => {
+          console.log(`Successfully loaded from ${url}`);
+          loadedSuccessfully = true;
+          mainWindow.webContents.openDevTools();
+        })
+        .catch(err => {
+          console.log(`Failed to load from ${url}:`, err);
+          // Try the next port
+          tryLoadPort(index + 1);
+        });
+    };
+    
+    tryLoadPort(0);
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
