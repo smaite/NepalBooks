@@ -5,6 +5,10 @@ const fs = require('fs');
 // Check if we're in development or production
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
+// Set app name
+app.name = 'Ledger Pro';
+app.setName('Ledger Pro');
+
 let mainWindow;
 
 function createWindow() {
@@ -15,12 +19,16 @@ function createWindow() {
     icon: path.join(__dirname, 'ledgerpro_icon.png'),
     frame: true, // Standard window frame with default controls
     titleBarStyle: 'default',
+    title: 'Ledger Pro - Accounting Software',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
   });
+
+  // Set the app icon
+  mainWindow.setIcon(path.join(__dirname, 'ledgerpro_icon.png'));
 
   // Load the app
   const startUrl = isDev
@@ -212,4 +220,13 @@ ipcMain.handle('write-file', async (event, filePath, data) => {
     console.error('Error writing file:', error);
     return false;
   }
+});
+
+// App info handler
+ipcMain.handle('get-app-info', () => {
+  return {
+    isElectron: true,
+    platform: process.platform,
+    appVersion: app.getVersion()
+  };
 }); 

@@ -18,8 +18,9 @@ function createWindow() {
       nodeIntegration: false,
     },
     backgroundColor: '#1a1b1e',
-    titleBarStyle: 'hidden',
+    titleBarStyle: 'default',
     frame: true,
+    autoHideMenuBar: true
   });
 
   // Initialize the update handler

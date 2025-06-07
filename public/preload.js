@@ -48,11 +48,7 @@ contextBridge.exposeInMainWorld(
     
     // App info
     getAppInfo: () => {
-      return {
-        isElectron: true,
-        platform: process.platform,
-        appVersion: process.env.npm_package_version || '1.2.0'
-      };
+      return ipcRenderer.invoke('get-app-info');
     }
   }
 ); 

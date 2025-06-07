@@ -8,6 +8,9 @@ export interface ElectronAPI {
   on: (channel: string, callback: (...args: unknown[]) => void) => void;
   downloadUpdate: (url: string) => Promise<boolean>;
   checkForUpdates: () => Promise<{ hasUpdate: boolean; version: string; downloadUrl: string }>;
+  minimizeWindow: () => void;
+  maximizeWindow: () => void;
+  closeWindow: () => void;
 }
 
 export interface SaveDialogOptions {
@@ -111,6 +114,24 @@ class ElectronService {
       return await this.electron!.checkForUpdates();
     }
     return { hasUpdate: false, version: '', downloadUrl: '' };
+  }
+
+  minimizeWindow(): void {
+    if (this.isElectron) {
+      this.electron!.minimizeWindow();
+    }
+  }
+  
+  maximizeWindow(): void {
+    if (this.isElectron) {
+      this.electron!.maximizeWindow();
+    }
+  }
+  
+  closeWindow(): void {
+    if (this.isElectron) {
+      this.electron!.closeWindow();
+    }
   }
 }
 

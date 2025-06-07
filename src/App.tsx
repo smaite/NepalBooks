@@ -43,6 +43,10 @@ import Suppliers from './pages/Suppliers';
 import Expenses from './pages/Expenses';
 import Categories from './pages/Categories';
 import StockAdjustment from './pages/StockAdjustment';
+import NewPurchase from './pages/NewPurchase';
+import PurchaseList from './pages/PurchaseList';
+import PurchaseReturn from './pages/PurchaseReturn';
+import PaymentMethods from './pages/PaymentMethods';
 import { ReleaseManager } from './components/admin/ReleaseManager';
 
 // Menu items types
@@ -178,23 +182,15 @@ function AppContent() {
 
   // Window control functions
   const handleMinimize = () => {
-    if (electronService.isElectron) {
-      window.electron?.ipcRenderer?.send('window-minimize');
-    }
+    electronService.minimizeWindow();
   };
 
   const handleMaximize = () => {
-    if (electronService.isElectron) {
-      window.electron?.ipcRenderer?.send('window-maximize');
-    }
+    electronService.maximizeWindow();
   };
 
   const handleClose = () => {
-    if (electronService.isElectron) {
-      window.electron?.ipcRenderer?.send('window-close');
-    } else {
-      window.close();
-    }
+    electronService.closeWindow();
   };
 
   // Initialize database and set up Electron event listeners
@@ -338,7 +334,11 @@ function AppContent() {
       icon: <IconSettings size={18} />,
       color: 'gray',
       label: 'Settings',
-      path: '/settings',
+      initiallyOpened: false,
+      links: [
+        { label: 'General Settings', path: '/settings' },
+        { label: 'Payment Methods', path: '/settings/payment-methods' },
+      ],
     },
   ];
 
@@ -459,6 +459,59 @@ function AppContent() {
               >
                 {dark ? <IconSun size="1.2rem" /> : <IconMoonStars size="1.2rem" />}
               </ActionIcon>
+              
+              {electronService.isElectron && (
+                <Group spacing={0}>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    onClick={handleMinimize}
+                    title="Minimize"
+                    size="lg"
+                    radius={0}
+                    sx={(theme) => ({
+                      '&:hover': {
+                        backgroundColor: theme.fn.rgba(theme.colors.blue[4], 0.1),
+                      }
+                    })}
+                  >
+                    <IconMinus size="1.2rem" />
+                  </ActionIcon>
+                  
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    onClick={handleMaximize}
+                    title="Maximize"
+                    size="lg"
+                    radius={0}
+                    sx={(theme) => ({
+                      '&:hover': {
+                        backgroundColor: theme.fn.rgba(theme.colors.blue[4], 0.1),
+                      }
+                    })}
+                  >
+                    <IconSquare size="1.2rem" />
+                  </ActionIcon>
+                  
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    onClick={handleClose}
+                    title="Close"
+                    size="lg"
+                    radius={0}
+                    sx={(theme) => ({
+                      '&:hover': {
+                        backgroundColor: theme.colors.red[7],
+                        color: 'white',
+                      }
+                    })}
+                  >
+                    <IconX size="1.2rem" />
+                  </ActionIcon>
+                </Group>
+              )}
             </Group>
           </Group>
         </Header>
@@ -485,14 +538,16 @@ function AppContent() {
           <Route path="/suppliers" element={<Suppliers />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/settings/payment-methods" element={<PaymentMethods />} />
           <Route path="/expenses" element={<Expenses />} />
           {/* Item management routes */}
           <Route path="/items/categories" element={<Categories />} />
           <Route path="/items/stock-adjustment" element={<StockAdjustment />} />
+          {/* Purchase routes */}
+          <Route path="/purchase/new" element={<NewPurchase />} />
+          <Route path="/purchase/list" element={<PurchaseList />} />
+          <Route path="/purchase/return" element={<PurchaseReturn />} />
           {/* Placeholder routes for new sections */}
-          <Route path="/purchase/new" element={<div><Title order={2}>New Purchase</Title></div>} />
-          <Route path="/purchase/list" element={<div><Title order={2}>Purchases List</Title></div>} />
-          <Route path="/purchase/return" element={<div><Title order={2}>Purchase Returns</Title></div>} />
           <Route path="/sales/new" element={<div><Title order={2}>New Sale</Title></div>} />
           <Route path="/sales/list" element={<div><Title order={2}>Sales List</Title></div>} />
           <Route path="/sales/return" element={<div><Title order={2}>Sales Returns</Title></div>} />

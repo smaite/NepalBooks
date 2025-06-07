@@ -41,13 +41,14 @@ contextBridge.exposeInMainWorld(
       }
     },
     
+    // Window controls
+    minimizeWindow: () => ipcRenderer.send('window-minimize'),
+    maximizeWindow: () => ipcRenderer.send('window-maximize'),
+    closeWindow: () => ipcRenderer.send('window-close'),
+    
     // App info
     getAppInfo: () => {
-      return {
-        isElectron: true,
-        platform: process.platform,
-        appVersion: process.env.npm_package_version || '1.2.0'
-      };
+      return ipcRenderer.invoke('get-app-info');
     }
   }
 ); 

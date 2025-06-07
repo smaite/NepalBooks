@@ -13,6 +13,7 @@ release
 dist-ssr
 *.local
 upd
+release-new
 
 # Editor directories and files
 .vscode/*
