@@ -15,7 +15,11 @@ import {
   IconUser,
   IconReceipt2,
   IconChevronDown,
-  IconChevronRight
+  IconChevronRight,
+  IconMinus,
+  IconSquare,
+  IconX,
+  IconSquareCheck
 } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { Notifications } from '@mantine/notifications';
@@ -38,6 +42,8 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Suppliers from './pages/Suppliers';
 import Expenses from './pages/Expenses';
+import Categories from './pages/Categories';
+import StockAdjustment from './pages/StockAdjustment';
 import { ReleaseManager } from './components/admin/ReleaseManager';
 
 // Menu items types
@@ -170,6 +176,7 @@ function AppContent() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
   const { initDatabase, exportData, importData } = useStore();
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Initialize database and set up Electron event listeners
   useEffect(() => {
@@ -180,8 +187,8 @@ function AppContent() {
     if (electronService.isElectron) {
       // Export data when triggered from the menu
       electronService.on('menu-export-data', () => {
-        const { items, customers, suppliers, transactions } = useStore.getState();
-        exportData({ items, customers, suppliers, transactions })
+        const { items, categories, customers, suppliers, transactions } = useStore.getState();
+        exportData({ items, categories, customers, suppliers, transactions })
           .then((message) => {
             if (message) {
               alert(message);
@@ -209,8 +216,8 @@ function AppContent() {
 
       // Backup data when triggered from the menu
       electronService.on('menu-backup', () => {
-        const { items, customers, suppliers, transactions } = useStore.getState();
-        exportData({ items, customers, suppliers, transactions }, true)
+        const { items, categories, customers, suppliers, transactions } = useStore.getState();
+        exportData({ items, categories, customers, suppliers, transactions }, true)
           .then((message) => {
             if (message) {
               alert(message);
@@ -237,6 +244,32 @@ function AppContent() {
       });
     }
   }, [initDatabase, exportData, importData]);
+
+  // Check if window is maximized on mount and when it changes
+  useEffect(() => {
+    const checkMaximized = async () => {
+      if (electronService.isElectron) {
+        const maximized = await electronService.isWindowMaximized();
+        setIsMaximized(maximized);
+      }
+    };
+    
+    checkMaximized();
+  }, []);
+
+  // Window control handlers
+  const handleMinimize = () => {
+    electronService.minimizeWindow();
+  };
+
+  const handleMaximize = async () => {
+    const maximized = await electronService.maximizeWindow();
+    setIsMaximized(maximized);
+  };
+
+  const handleClose = () => {
+    electronService.closeWindow();
+  };
 
   const mainNavItems: NavItem[] = [
     {
@@ -401,6 +434,7 @@ function AppContent() {
               : theme.fn.rgba(theme.colors.gray[0], 0.85),
             backdropFilter: 'blur(10px)',
             borderBottom: `1px solid ${dark ? theme.colors.dark[5] : theme.colors.gray[2]}`,
+            WebkitAppRegion: 'drag', // Make header draggable
           })}
         >
           <Group position="apart" sx={{ height: '100%' }}>
@@ -410,6 +444,7 @@ function AppContent() {
                 onClick={() => setOpened((o) => !o)}
                 size="sm"
                 color={dark ? 'white' : 'black'}
+                sx={{ WebkitAppRegion: 'no-drag' }} // Make burger button clickable
               />
               <Title order={3} sx={(theme) => ({ 
                 color: dark ? theme.colors.blue[4] : theme.colors.blue[8],
@@ -418,19 +453,75 @@ function AppContent() {
                   display: 'none',
                 },
               })}>
-                {appConfig.name}
+                {appConfig.name} <Text span size="xs" color="dimmed">v{appConfig.version}</Text>
               </Title>
             </Group>
-            <ActionIcon
-              variant="light"
-              color={dark ? 'yellow' : 'blue'}
-              onClick={() => toggleColorScheme()}
-              title="Toggle color scheme"
-              size="lg"
-              radius="md"
-            >
-              {dark ? <IconSun size="1.2rem" /> : <IconMoonStars size="1.2rem" />}
-            </ActionIcon>
+            
+            <Group spacing={5} sx={{ WebkitAppRegion: 'no-drag' }}> {/* Make buttons clickable */}
+              <ActionIcon
+                variant="light"
+                color={dark ? 'yellow' : 'blue'}
+                onClick={() => toggleColorScheme()}
+                title="Toggle color scheme"
+                size="lg"
+                radius="md"
+              >
+                {dark ? <IconSun size="1.2rem" /> : <IconMoonStars size="1.2rem" />}
+              </ActionIcon>
+              
+              {electronService.isElectron && (
+                <Group spacing={0}>
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    onClick={handleMinimize}
+                    title="Minimize"
+                    size="lg"
+                    radius={0}
+                    sx={(theme) => ({
+                      '&:hover': {
+                        backgroundColor: theme.fn.rgba(theme.colors.blue[4], 0.1),
+                      }
+                    })}
+                  >
+                    <IconMinus size="1.2rem" />
+                  </ActionIcon>
+                  
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    onClick={handleMaximize}
+                    title={isMaximized ? "Restore" : "Maximize"}
+                    size="lg"
+                    radius={0}
+                    sx={(theme) => ({
+                      '&:hover': {
+                        backgroundColor: theme.fn.rgba(theme.colors.blue[4], 0.1),
+                      }
+                    })}
+                  >
+                    {isMaximized ? <IconSquareCheck size="1.2rem" /> : <IconSquare size="1.2rem" />}
+                  </ActionIcon>
+                  
+                  <ActionIcon
+                    variant="subtle"
+                    color="red"
+                    onClick={handleClose}
+                    title="Close"
+                    size="lg"
+                    radius={0}
+                    sx={(theme) => ({
+                      '&:hover': {
+                        backgroundColor: theme.colors.red[7],
+                        color: 'white',
+                      }
+                    })}
+                  >
+                    <IconX size="1.2rem" />
+                  </ActionIcon>
+                </Group>
+              )}
+            </Group>
           </Group>
         </Header>
       }
@@ -457,9 +548,10 @@ function AppContent() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/expenses" element={<Expenses />} />
+          {/* Item management routes */}
+          <Route path="/items/categories" element={<Categories />} />
+          <Route path="/items/stock-adjustment" element={<StockAdjustment />} />
           {/* Placeholder routes for new sections */}
-          <Route path="/items/categories" element={<div><Title order={2}>Item Categories</Title></div>} />
-          <Route path="/items/stock-adjustment" element={<div><Title order={2}>Stock Adjustment</Title></div>} />
           <Route path="/purchase/new" element={<div><Title order={2}>New Purchase</Title></div>} />
           <Route path="/purchase/list" element={<div><Title order={2}>Purchases List</Title></div>} />
           <Route path="/purchase/return" element={<div><Title order={2}>Purchase Returns</Title></div>} />

@@ -1,0 +1,25 @@
+{
+  "short_name": "Ledger Pro",
+  "name": "Ledger Pro - Accounting Software",
+  "icons": [
+    {
+      "src": "ledgerpro_icon.png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "ledgerpro_icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "ledgerpro_icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1c7ed6",
+  "background_color": "#ffffff"
+} 

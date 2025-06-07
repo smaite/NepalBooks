@@ -33,15 +33,8 @@ import {
   IconAlertTriangle,
   IconHistory
 } from '@tabler/icons-react';
-
-interface Item {
-  id: string;
-  name: string;
-  sku: string;
-  categoryName: string;
-  quantity: number;
-  minQuantity: number;
-}
+import { useStore } from '../../store/useStore';
+import { v4 as uuidv4 } from 'uuid';
 
 interface StockAdjustment {
   id: string;
@@ -55,12 +48,13 @@ interface StockAdjustment {
 }
 
 export function StockManagement() {
-  const [items, setItems] = useState<Item[]>([]);
-  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const { items: storeItems, updateItem } = useStore();
+  const [items, setItems] = useState(storeItems);
+  const [filteredItems, setFilteredItems] = useState(storeItems);
   const [stockAdjustments, setStockAdjustments] = useState<StockAdjustment[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [selectedItem, setSelectedItem] = useState<typeof storeItems[0] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string | null>('inventory');
@@ -81,125 +75,27 @@ export function StockManagement() {
     },
   });
 
-  // Load items and stock adjustments on mount
+  // Update local items when store items change
   useEffect(() => {
-    loadItems();
-    loadStockAdjustments();
+    setItems(storeItems);
+  }, [storeItems]);
+
+  // Load stock adjustments from localStorage on mount
+  useEffect(() => {
+    const savedAdjustments = localStorage.getItem('stockAdjustments');
+    if (savedAdjustments) {
+      try {
+        setStockAdjustments(JSON.parse(savedAdjustments));
+      } catch (error) {
+        console.error('Error loading stock adjustments:', error);
+      }
+    }
   }, []);
 
   // Filter items when search query or filters change
   useEffect(() => {
     filterItems();
   }, [searchQuery, stockFilter, items]);
-
-  // Load items from database/API
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      // Replace with actual API call
-      // const response = await api.getItems();
-      // setItems(response.data);
-      
-      // Mock data for now
-      setTimeout(() => {
-        setItems([
-          {
-            id: '1',
-            name: 'Mathematics Textbook',
-            sku: 'BOOK-MATH-001',
-            categoryName: 'Books',
-            quantity: 25,
-            minQuantity: 10,
-          },
-          {
-            id: '2',
-            name: 'Ballpoint Pen (Blue)',
-            sku: 'STAT-PEN-001',
-            categoryName: 'Stationery',
-            quantity: 150,
-            minQuantity: 50,
-          },
-          {
-            id: '3',
-            name: 'Scientific Calculator',
-            sku: 'ELEC-CALC-001',
-            categoryName: 'Electronics',
-            quantity: 5,
-            minQuantity: 10,
-          },
-        ]);
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error loading items:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Failed to load items. Please try again.',
-        color: 'red',
-      });
-      setLoading(false);
-    }
-  };
-
-  // Load stock adjustments from database/API
-  const loadStockAdjustments = async () => {
-    try {
-      // Replace with actual API call
-      // const response = await api.getStockAdjustments();
-      // setStockAdjustments(response.data);
-      
-      // Mock data for now
-      setStockAdjustments([
-        {
-          id: '1',
-          itemId: '1',
-          itemName: 'Mathematics Textbook',
-          type: 'in',
-          quantity: 30,
-          reason: 'Initial stock',
-          notes: 'Received from publisher',
-          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: '2',
-          itemId: '1',
-          itemName: 'Mathematics Textbook',
-          type: 'out',
-          quantity: 5,
-          reason: 'Sale',
-          notes: 'Sold to customer',
-          date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: '3',
-          itemId: '3',
-          itemName: 'Scientific Calculator',
-          type: 'in',
-          quantity: 10,
-          reason: 'Purchase',
-          notes: 'Ordered from supplier',
-          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: '4',
-          itemId: '3',
-          itemName: 'Scientific Calculator',
-          type: 'out',
-          quantity: 5,
-          reason: 'Sale',
-          notes: 'Sold to customer',
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ]);
-    } catch (error) {
-      console.error('Error loading stock adjustments:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Failed to load stock adjustment history.',
-        color: 'red',
-      });
-    }
-  };
 
   // Filter items based on search query and filters
   const filterItems = () => {
@@ -211,7 +107,8 @@ export function StockManagement() {
       filtered = filtered.filter(
         item => 
           item.name.toLowerCase().includes(query) || 
-          item.sku.toLowerCase().includes(query)
+          item.code.toLowerCase().includes(query) ||
+          item.category.toLowerCase().includes(query)
       );
     }
     
@@ -219,13 +116,13 @@ export function StockManagement() {
     if (stockFilter) {
       switch (stockFilter) {
         case 'low':
-          filtered = filtered.filter(item => item.quantity <= item.minQuantity);
+          filtered = filtered.filter(item => item.stockQuantity <= item.minStockLevel);
           break;
         case 'out':
-          filtered = filtered.filter(item => item.quantity === 0);
+          filtered = filtered.filter(item => item.stockQuantity === 0);
           break;
         case 'in':
-          filtered = filtered.filter(item => item.quantity > 0);
+          filtered = filtered.filter(item => item.stockQuantity > 0);
           break;
       }
     }
@@ -240,7 +137,7 @@ export function StockManagement() {
   };
 
   // Open modal for adding a stock adjustment
-  const openAdjustmentModal = (item: Item | null = null) => {
+  const openAdjustmentModal = (item: typeof storeItems[0] | null = null) => {
     form.reset();
     
     if (item) {
@@ -253,38 +150,41 @@ export function StockManagement() {
     setModalOpen(true);
   };
 
-  // Handle form submission
+  // Handle form submission for stock adjustment
   const handleSubmit = async (values: typeof form.values) => {
     try {
       setLoading(true);
       
       // Get the selected item
       const item = items.find(i => i.id === values.itemId);
-      
       if (!item) {
         showNotification({
           title: 'Error',
           message: 'Selected item not found.',
           color: 'red',
         });
-        setLoading(false);
         return;
       }
       
-      // Check if there's enough stock for outgoing adjustment
-      if (values.type === 'out' && values.quantity > item.quantity) {
+      // Calculate new quantity
+      const newQuantity = values.type === 'in' 
+        ? item.stockQuantity + values.quantity 
+        : item.stockQuantity - values.quantity;
+      
+      // Validate quantity for outgoing adjustments
+      if (values.type === 'out' && newQuantity < 0) {
         showNotification({
           title: 'Error',
-          message: `Not enough stock. Current quantity: ${item.quantity}`,
+          message: `Cannot remove more than available quantity (${item.stockQuantity} available).`,
           color: 'red',
         });
         setLoading(false);
         return;
       }
       
-      // Create the adjustment
+      // Create new adjustment record
       const newAdjustment: StockAdjustment = {
-        id: Math.random().toString(36).substring(2, 9),
+        id: uuidv4(),
         itemId: values.itemId,
         itemName: item.name,
         type: values.type,
@@ -294,39 +194,29 @@ export function StockManagement() {
         date: new Date().toISOString(),
       };
       
-      // Update the stock quantity
-      const updatedItems = items.map(i => {
-        if (i.id === values.itemId) {
-          return {
-            ...i,
-            quantity: values.type === 'in' 
-              ? i.quantity + values.quantity 
-              : i.quantity - values.quantity
-          };
-        }
-        return i;
-      });
+      // Update stock adjustments
+      const updatedAdjustments = [newAdjustment, ...stockAdjustments];
+      setStockAdjustments(updatedAdjustments);
       
-      // Save the adjustment
-      // await api.createStockAdjustment(newAdjustment);
+      // Save to localStorage
+      localStorage.setItem('stockAdjustments', JSON.stringify(updatedAdjustments));
       
-      // Update local state
-      setStockAdjustments([newAdjustment, ...stockAdjustments]);
-      setItems(updatedItems);
+      // Update item quantity in store
+      updateItem(item.id, { stockQuantity: newQuantity });
       
       showNotification({
         title: 'Success',
-        message: 'Stock adjustment recorded successfully',
+        message: `Stock ${values.type === 'in' ? 'added to' : 'removed from'} ${item.name}.`,
         color: 'green',
       });
       
       setModalOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Error saving stock adjustment:', error);
+      console.error('Error adjusting stock:', error);
       showNotification({
         title: 'Error',
-        message: 'Failed to save stock adjustment. Please try again.',
+        message: 'Failed to adjust stock. Please try again.',
         color: 'red',
       });
     } finally {
@@ -334,11 +224,11 @@ export function StockManagement() {
     }
   };
 
-  // Get stock status badge
-  const getStockStatusBadge = (item: Item) => {
-    if (item.quantity === 0) {
+  // Get badge for stock status
+  const getStockStatusBadge = (item: typeof storeItems[0]) => {
+    if (item.stockQuantity <= 0) {
       return <Badge color="red">Out of Stock</Badge>;
-    } else if (item.quantity <= item.minQuantity) {
+    } else if (item.stockQuantity <= item.minStockLevel) {
       return <Badge color="orange">Low Stock</Badge>;
     } else {
       return <Badge color="green">In Stock</Badge>;
@@ -437,16 +327,16 @@ export function StockManagement() {
                         </Group>
                       </td>
                       <td>
-                        <Text size="sm">{item.sku}</Text>
+                        <Text size="sm">{item.code}</Text>
                       </td>
                       <td>
-                        <Text size="sm">{item.categoryName}</Text>
+                        <Text size="sm">{item.category}</Text>
                       </td>
                       <td>
-                        <Text size="sm">{item.quantity}</Text>
+                        <Text size="sm">{item.stockQuantity}</Text>
                       </td>
                       <td>
-                        <Text size="sm">{item.minQuantity}</Text>
+                        <Text size="sm">{item.minStockLevel}</Text>
                       </td>
                       <td>
                         {getStockStatusBadge(item)}
@@ -486,7 +376,7 @@ export function StockManagement() {
                               setModalOpen(true);
                             }}
                             title="Remove Stock"
-                            disabled={item.quantity <= 0}
+                            disabled={item.stockQuantity <= 0}
                           >
                             <IconArrowDown size={16} />
                           </ActionIcon>
@@ -506,7 +396,7 @@ export function StockManagement() {
           </Card>
           
           {/* Show low stock warning */}
-          {items.some(item => item.quantity <= item.minQuantity) && (
+          {items.some(item => item.stockQuantity <= item.minStockLevel) && (
             <Card withBorder mt="md" sx={(theme) => ({
               backgroundColor: theme.colorScheme === 'dark' 
                 ? theme.fn.rgba(theme.colors.orange[7], 0.2) 
@@ -608,7 +498,7 @@ export function StockManagement() {
             {selectedItem && (
               <Group spacing="xs">
                 <Text size="sm">Current Stock:</Text>
-                <Text size="sm" weight={500}>{selectedItem.quantity}</Text>
+                <Text size="sm" weight={500}>{selectedItem.stockQuantity}</Text>
               </Group>
             )}
             

@@ -17,6 +17,14 @@ export interface Item {
   description: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Customer {
   id: string;
   name: string;
@@ -70,6 +78,7 @@ export interface Settings {
 
 interface StoreState {
   items: Item[];
+  categories: Category[];
   customers: Customer[];
   suppliers: Supplier[];
   transactions: Transaction[];
@@ -80,6 +89,10 @@ interface StoreState {
   addItem: (item: Omit<Item, 'id'>) => void;
   updateItem: (id: string, item: Partial<Item>) => void;
   deleteItem: (id: string) => void;
+  
+  addCategory: (category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateCategory: (id: string, category: Partial<Omit<Category, 'createdAt' | 'updatedAt'>>) => void;
+  deleteCategory: (id: string) => void;
   
   addCustomer: (customer: Omit<Customer, 'id'>) => void;
   updateCustomer: (id: string, customer: Partial<Customer>) => void;
@@ -103,6 +116,7 @@ interface StoreState {
 // Define the data structure for export/import
 interface ExportData {
   items: Item[];
+  categories: Category[];
   customers: Customer[];
   suppliers: Supplier[];
   transactions: Transaction[];
@@ -112,6 +126,7 @@ export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
       items: [],
+      categories: [],
       customers: [],
       suppliers: [],
       transactions: [],
@@ -151,6 +166,35 @@ export const useStore = create<StoreState>()(
       deleteItem: (id) => {
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
+        }));
+        get().syncWithDatabase();
+      },
+
+      addCategory: (category) => {
+        const newCategory = { 
+          ...category, 
+          id: uuidv4(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        set((state) => ({ categories: [...state.categories, newCategory] }));
+        get().syncWithDatabase();
+      },
+      
+      updateCategory: (id, category) => {
+        set((state) => ({
+          categories: state.categories.map((c) => 
+            c.id === id 
+              ? { ...c, ...category, updatedAt: new Date().toISOString() } 
+              : c
+          ),
+        }));
+        get().syncWithDatabase();
+      },
+      
+      deleteCategory: (id) => {
+        set((state) => ({
+          categories: state.categories.filter((c) => c.id !== id),
         }));
         get().syncWithDatabase();
       },
@@ -248,6 +292,7 @@ export const useStore = create<StoreState>()(
               if (data) {
                 set({
                   items: data.items || [],
+                  categories: data.categories || [],
                   customers: data.customers || [],
                   suppliers: data.suppliers || [],
                   transactions: data.transactions || [],
@@ -265,19 +310,16 @@ export const useStore = create<StoreState>()(
       },
 
       syncWithDatabase: async () => {
-        const { dbService, items, customers, suppliers, transactions } = get();
+        const { dbService, items, categories, customers, suppliers, transactions } = get();
+        
         if (dbService && dbService.isConnected) {
-          try {
-            await dbService.saveData({
-              items,
-              customers,
-              suppliers,
-              transactions,
-            });
-            console.log('Data synced to database');
-          } catch (error) {
-            console.error('Failed to sync data with database:', error);
-          }
+          await dbService.saveData({
+            items,
+            categories,
+            customers,
+            suppliers,
+            transactions,
+          });
         }
       },
 
@@ -297,6 +339,7 @@ export const useStore = create<StoreState>()(
             // Update the store with imported data
             set({
               items: data.items || [],
+              categories: data.categories || [],
               customers: data.customers || [],
               suppliers: data.suppliers || [],
               transactions: data.transactions || [],
@@ -308,7 +351,7 @@ export const useStore = create<StoreState>()(
       },
     }),
     {
-      name: 'nepalbooks-storage',
+      name: 'nepalbooks-store',
     }
   )
 ); 

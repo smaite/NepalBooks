@@ -12,7 +12,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(__dirname, 'logo512.png'),
+    icon: path.join(__dirname, 'ledgerpro_icon.png'),
+    frame: false, // Frameless window
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -109,7 +110,7 @@ function createWindow() {
             dialog.showMessageBox(mainWindow, {
               title: 'About Ledger Pro',
               message: 'Ledger Pro - Accounting Software',
-              detail: 'Version 1.1.2\nCopyright © 2023-2024\n\nA comprehensive accounting solution for businesses.',
+              detail: 'Version 1.2.0\nCopyright © 2023-2024\n\nA comprehensive accounting solution for businesses.',
               buttons: ['OK'],
               icon: path.join(__dirname, 'ledgerpro_icon.png')
             });
@@ -182,4 +183,33 @@ ipcMain.handle('write-file', async (event, filePath, data) => {
     console.error('Error writing file:', error);
     return false;
   }
+});
+
+// Window control handlers
+ipcMain.handle('window-minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+  return true;
+});
+
+ipcMain.handle('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+      return false;
+    } else {
+      mainWindow.maximize();
+      return true;
+    }
+  }
+  return false;
+});
+
+ipcMain.handle('window-close', () => {
+  if (mainWindow) mainWindow.close();
+  return true;
+});
+
+ipcMain.handle('window-is-maximized', () => {
+  if (mainWindow) return mainWindow.isMaximized();
+  return false;
 }); 

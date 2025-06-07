@@ -14,27 +14,33 @@ import {
   Textarea,
   Divider,
   Menu,
-  LoadingOverlay
+  LoadingOverlay,
+  Badge
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { showNotification } from '@mantine/notifications';
-import { IconEdit, IconTrash, IconPlus, IconDots, IconCategory } from '@tabler/icons-react';
+import { IconEdit, IconTrash, IconPlus, IconDots, IconCategory, IconSearch } from '@tabler/icons-react';
+import { useStore } from '../../store/useStore';
 
-interface Category {
+interface CategoryWithItemCount {
   id: string;
   name: string;
   description: string;
   createdAt: string;
   updatedAt: string;
+  itemCount: number;
 }
 
 export function CategoryManagement() {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, items, addCategory, updateCategory, deleteCategory } = useStore();
+  const [categoriesWithCount, setCategoriesWithCount] = useState<CategoryWithItemCount[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<CategoryWithItemCount[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryWithItemCount | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryWithItemCount | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form for adding/editing categories
   const form = useForm({
@@ -43,60 +49,44 @@ export function CategoryManagement() {
       description: '',
     },
     validate: {
-      name: (value) => (value.trim().length < 2 ? 'Category name must be at least 2 characters' : null),
+      name: (value) => {
+        if (value.trim().length < 2) return 'Category name must be at least 2 characters';
+        if (editingCategory && editingCategory.name !== value) {
+          // Check if name already exists (only when creating new or changing name)
+          const exists = categories.some(cat => 
+            cat.id !== (editingCategory?.id || '') && 
+            cat.name.toLowerCase() === value.toLowerCase()
+          );
+          if (exists) return 'A category with this name already exists';
+        }
+        return null;
+      },
     },
   });
 
-  // Load categories on mount
+  // Calculate item counts for each category
   useEffect(() => {
-    loadCategories();
-  }, []);
+    const withCounts = categories.map(category => {
+      const count = items.filter(item => item.category === category.name).length;
+      return { ...category, itemCount: count };
+    });
+    setCategoriesWithCount(withCounts);
+  }, [categories, items]);
 
-  // Load categories from database/API
-  const loadCategories = async () => {
-    try {
-      setLoading(true);
-      // Replace with actual API call
-      // const response = await api.getCategories();
-      // setCategories(response.data);
-      
-      // Mock data for now
-      setTimeout(() => {
-        setCategories([
-          {
-            id: '1',
-            name: 'Books',
-            description: 'Educational and reference books',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          {
-            id: '2',
-            name: 'Stationery',
-            description: 'Pens, pencils, notebooks, etc.',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          {
-            id: '3',
-            name: 'Electronics',
-            description: 'Calculators, computers, etc.',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ]);
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Failed to load categories. Please try again.',
-        color: 'red',
-      });
-      setLoading(false);
+  // Filter categories when search query changes
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredCategories(categoriesWithCount);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredCategories(
+        categoriesWithCount.filter(cat => 
+          cat.name.toLowerCase().includes(query) || 
+          cat.description.toLowerCase().includes(query)
+        )
+      );
     }
-  };
+  }, [searchQuery, categoriesWithCount]);
 
   // Open modal for adding a new category
   const openAddModal = () => {
@@ -106,7 +96,7 @@ export function CategoryManagement() {
   };
 
   // Open modal for editing a category
-  const openEditModal = (category: Category) => {
+  const openEditModal = (category: CategoryWithItemCount) => {
     form.setValues({
       name: category.name,
       description: category.description,
@@ -116,9 +106,15 @@ export function CategoryManagement() {
   };
 
   // Open delete confirmation modal
-  const openDeleteModal = (category: Category) => {
+  const openDeleteModal = (category: CategoryWithItemCount) => {
     setCategoryToDelete(category);
     setDeleteModalOpen(true);
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
   // Handle form submission (add/edit)
@@ -128,14 +124,7 @@ export function CategoryManagement() {
       
       if (editingCategory) {
         // Edit existing category
-        // await api.updateCategory(editingCategory.id, values);
-        
-        // Update local state
-        setCategories(categories.map(cat => 
-          cat.id === editingCategory.id 
-            ? { ...cat, ...values, updatedAt: new Date().toISOString() } 
-            : cat
-        ));
+        updateCategory(editingCategory.id, values);
         
         showNotification({
           title: 'Success',
@@ -144,18 +133,7 @@ export function CategoryManagement() {
         });
       } else {
         // Add new category
-        // const response = await api.createCategory(values);
-        
-        // Add to local state with mock ID
-        const newCategory: Category = {
-          id: Math.random().toString(36).substring(2, 9),
-          name: values.name,
-          description: values.description,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        setCategories([...categories, newCategory]);
+        addCategory(values);
         
         showNotification({
           title: 'Success',
@@ -186,10 +164,7 @@ export function CategoryManagement() {
       setLoading(true);
       
       // Delete category
-      // await api.deleteCategory(categoryToDelete.id);
-      
-      // Update local state
-      setCategories(categories.filter(cat => cat.id !== categoryToDelete.id));
+      deleteCategory(categoryToDelete.id);
       
       showNotification({
         title: 'Success',
@@ -216,7 +191,13 @@ export function CategoryManagement() {
       <LoadingOverlay visible={loading} overlayBlur={2} />
       
       <Group position="apart" mb="md">
-        <Title order={2}>Categories</Title>
+        <TextInput
+          placeholder="Search categories..."
+          icon={<IconSearch size={16} />}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ width: '300px' }}
+        />
         <Button
           leftIcon={<IconPlus size={16} />}
           onClick={openAddModal}
@@ -231,13 +212,14 @@ export function CategoryManagement() {
             <tr>
               <th>Name</th>
               <th>Description</th>
+              <th>Items</th>
               <th>Last Updated</th>
               <th style={{ width: 80 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {categories.length > 0 ? (
-              categories.map((category) => (
+            {filteredCategories.length > 0 ? (
+              filteredCategories.map((category) => (
                 <tr key={category.id}>
                   <td>
                     <Group spacing="sm">
@@ -249,40 +231,48 @@ export function CategoryManagement() {
                     <Text lineClamp={1}>{category.description}</Text>
                   </td>
                   <td>
-                    <Text size="sm" color="dimmed">
-                      {new Date(category.updatedAt).toLocaleDateString()}
-                    </Text>
+                    <Badge>{category.itemCount}</Badge>
                   </td>
+                  <td>{formatDate(category.updatedAt)}</td>
                   <td>
-                    <Menu position="bottom-end" withinPortal>
-                      <Menu.Target>
-                        <ActionIcon>
-                          <IconDots size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item 
-                          icon={<IconEdit size={16} />}
-                          onClick={() => openEditModal(category)}
-                        >
-                          Edit
-                        </Menu.Item>
-                        <Menu.Item 
-                          icon={<IconTrash size={16} />}
-                          color="red"
-                          onClick={() => openDeleteModal(category)}
-                        >
-                          Delete
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
+                    <Group spacing={0} position="right">
+                      <ActionIcon color="blue" onClick={() => openEditModal(category)}>
+                        <IconEdit size={16} />
+                      </ActionIcon>
+                      <Menu position="bottom-end" withinPortal>
+                        <Menu.Target>
+                          <ActionIcon>
+                            <IconDots size={16} />
+                          </ActionIcon>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                          <Menu.Item 
+                            icon={<IconEdit size={16} />}
+                            onClick={() => openEditModal(category)}
+                          >
+                            Edit
+                          </Menu.Item>
+                          <Menu.Item 
+                            color="red" 
+                            icon={<IconTrash size={16} />}
+                            onClick={() => openDeleteModal(category)}
+                          >
+                            Delete
+                          </Menu.Item>
+                        </Menu.Dropdown>
+                      </Menu>
+                    </Group>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4}>
-                  <Text align="center" py="md">No categories found</Text>
+                <td colSpan={5}>
+                  <Text align="center" py="md" color="dimmed">
+                    {categoriesWithCount.length === 0 
+                      ? 'No categories found. Add your first category to get started.' 
+                      : 'No categories match your search criteria.'}
+                  </Text>
                 </td>
               </tr>
             )}
@@ -290,15 +280,15 @@ export function CategoryManagement() {
         </Table>
       </Card>
       
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Category Modal */}
       <Modal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingCategory ? "Edit Category" : "Add Category"}
-        centered
+        title={editingCategory ? 'Edit Category' : 'Add New Category'}
+        size="md"
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
-          <Stack spacing="md">
+          <Stack>
             <TextInput
               required
               label="Category Name"
@@ -313,9 +303,11 @@ export function CategoryManagement() {
               {...form.getInputProps('description')}
             />
             
-            <Group position="right" mt="md">
-              <Button variant="subtle" onClick={() => setModalOpen(false)}>Cancel</Button>
-              <Button type="submit">{editingCategory ? 'Update' : 'Add'}</Button>
+            <Divider my="sm" />
+            
+            <Group position="right">
+              <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button type="submit">{editingCategory ? 'Update' : 'Add'} Category</Button>
             </Group>
           </Stack>
         </form>
@@ -326,23 +318,22 @@ export function CategoryManagement() {
         opened={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         title="Delete Category"
-        centered
+        size="sm"
       >
-        <Stack spacing="md">
-          <Text>
-            Are you sure you want to delete the category "{categoryToDelete?.name}"?
-            This action cannot be undone.
-          </Text>
+        <Stack>
+          <Text>Are you sure you want to delete the category "{categoryToDelete?.name}"?</Text>
           
-          <Text size="sm" color="red">
-            Note: Deleting a category will not delete the items in that category.
-            Those items will no longer be associated with any category.
-          </Text>
+          {categoryToDelete?.itemCount && categoryToDelete.itemCount > 0 && (
+            <Text color="red">
+              Warning: This category contains {categoryToDelete.itemCount} items. 
+              Deleting it may affect those items.
+            </Text>
+          )}
           
-          <Divider />
+          <Divider my="sm" />
           
           <Group position="right">
-            <Button variant="subtle" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
             <Button color="red" onClick={handleDelete}>Delete</Button>
           </Group>
         </Stack>

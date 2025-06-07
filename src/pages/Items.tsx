@@ -17,6 +17,8 @@ import {
   Box,
   Card,
   Pagination,
+  Tabs,
+  Anchor,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { 
@@ -26,8 +28,11 @@ import {
   IconPlus,
   IconFilter,
   IconSortAscending,
-  IconDownload
+  IconDownload,
+  IconPackage,
+  IconCategory
 } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { formatCurrency } from '../utils/formatters';
 
@@ -60,7 +65,7 @@ interface Item {
 }
 
 const Items = () => {
-  const { items, addItem, updateItem, deleteItem, settings } = useStore();
+  const { items, categories, addItem, updateItem, deleteItem, addCategory, settings } = useStore();
   const [opened, setOpened] = useState(false);
   const [activePage, setActivePage] = useState(1);
   const [search, setSearch] = useState('');
@@ -113,13 +118,23 @@ const Items = () => {
     deleteItem(id);
   };
 
-  const categories = [
-    { value: 'Electronics', label: 'Electronics' },
-    { value: 'Clothing', label: 'Clothing' },
-    { value: 'Groceries', label: 'Groceries' },
-    { value: 'Stationery', label: 'Stationery' },
-    { value: 'Furniture', label: 'Furniture' },
-  ];
+  // Get categories from store
+  const categoryOptions = categories.map(cat => ({
+    value: cat.name,
+    label: cat.name
+  }));
+
+  // Handle creating a new category
+  const handleCreateCategory = (query: string) => {
+    // Add the new category to the store
+    addCategory({
+      name: query,
+      description: `Created while adding item on ${new Date().toLocaleDateString()}`
+    });
+    
+    // Return the new option for the select
+    return { value: query, label: query };
+  };
 
   const units = [
     { value: 'piece', label: 'Piece' },
@@ -145,16 +160,34 @@ const Items = () => {
     <Stack spacing="md">
       <Group position="apart">
         <Title order={2}>Inventory Items</Title>
-        <Button 
-          leftIcon={<IconPlus size="1rem" />}
-          onClick={() => {
-            form.reset();
-            setEditingItem(null);
-            setOpened(true);
-          }}
-        >
-          Add Item
-        </Button>
+        <Group spacing="sm">
+          <Button 
+            variant="outline"
+            leftIcon={<IconCategory size="1rem" />}
+            component={Link}
+            to="/items/categories"
+          >
+            Categories
+          </Button>
+          <Button 
+            variant="outline"
+            leftIcon={<IconPackage size="1rem" />}
+            component={Link}
+            to="/items/stock-adjustment"
+          >
+            Stock Adjustment
+          </Button>
+          <Button 
+            leftIcon={<IconPlus size="1rem" />}
+            onClick={() => {
+              form.reset();
+              setEditingItem(null);
+              setOpened(true);
+            }}
+          >
+            Add Item
+          </Button>
+        </Group>
       </Group>
 
       <Card withBorder shadow="sm" radius="md" p="md">
@@ -275,8 +308,12 @@ const Items = () => {
               <Select
                 required
                 label="Category"
-                placeholder="Select category"
-                data={categories}
+                placeholder="Select or type to search category"
+                data={categoryOptions}
+                searchable
+                creatable
+                getCreateLabel={(query) => `+ Create category "${query}"`}
+                onCreate={handleCreateCategory}
                 {...form.getInputProps('category')}
               />
             </Grid.Col>

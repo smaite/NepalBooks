@@ -1,8 +1,9 @@
-import type { Settings, Item, Customer, Supplier, Transaction } from '../store/useStore';
+import type { Settings, Item, Customer, Supplier, Transaction, Category } from '../store/useStore';
 import { electronService } from './ElectronService';
 
 interface StoredData {
   items: Item[];
+  categories: Category[];
   customers: Customer[];
   suppliers: Supplier[];
   transactions: Transaction[];
@@ -13,6 +14,7 @@ export class DatabaseService {
   private _isConnected: boolean = false;
   private localData: StoredData = {
     items: [],
+    categories: [],
     customers: [],
     suppliers: [],
     transactions: [],

@@ -1,7 +1,7 @@
 // Application configuration
 export const appConfig = {
   name: 'Ledger Pro',
-  version: import.meta.env.VITE_APP_VERSION || '1.1.2',
+  version: import.meta.env.VITE_APP_VERSION || '1.2.0',
   logo: {
     src: '/ledgerpro_icon.png',
     alt: 'Ledger Pro Logo',
